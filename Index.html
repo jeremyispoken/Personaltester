@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Financiero RRS · 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f0f2f7;
+    --surface:#ffffff;
+    --card:#ffffff;
+    --panel:#f7f8fc;
+    --border:#dde1ec;
+    --border2:#c8cfe0;
+    --accent:#2563eb;
+    --accent-light:#eff4ff;
+    --red:#dc2626;
+    --red-light:#fef2f2;
+    --green:#16a34a;
+    --green-light:#f0fdf4;
+    --blue:#2563eb;
+    --blue-light:#eff4ff;
+    --orange:#d97706;
+    --orange-light:#fffbeb;
+    --purple:#7c3aed;
+    --muted:#6b7280;
+    --muted2:#9ca3af;
+    --text:#111827;
+    --text2:#374151;
+    --font-display:'Syne',sans-serif;
+    --font-mono:'Space Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-display);min-height:100vh;}
+
+  /* HEADER */
+  .header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;gap:10px;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+  .logo{display:flex;align-items:center;gap:10px;}
+  .logo-mark{width:32px;height:32px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;color:#fff;font-size:12px;border-radius:6px;}
+  .logo-text{font-size:14px;font-weight:800;letter-spacing:0.04em;color:var(--text);}
+  .logo-sub{font-size:10px;color:var(--muted);font-family:var(--font-mono);}
+  .header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+  /* BUTTONS */
+  .btn{padding:6px 14px;font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.06em;cursor:pointer;border:none;text-transform:uppercase;transition:all 0.15s;border-radius:4px;}
+  .btn-accent{background:var(--accent);color:#fff;}
+  .btn-accent:hover{background:#1d4ed8;}
+  .btn-outline{background:transparent;color:var(--text2);border:1px solid var(--border2);}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:3px;}
+  .btn-ghost:hover{color:var(--red);border-color:var(--red);}
+
+  /* SYNC */
+  .sync-badge{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--font-mono);padding:5px 10px;border:1px solid var(--border);cursor:pointer;transition:all 0.15s;border-radius:4px;color:var(--muted);background:var(--panel);}
+  .sync-badge:hover{border-color:var(--accent);color:var(--accent);}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--muted2);}
+  .sync-dot.synced{background:var(--green);}
+  .sync-dot.syncing{background:var(--orange);animation:pulse 1s infinite;}
+  .sync-dot.error{background:var(--red);}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+  /* LAYOUT */
+  .container{padding:20px 24px;max-width:1400px;margin:0 auto;}
+
+  /* KPI */
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  .kpi{background:var(--card);border:1px solid var(--border);padding:16px 18px;border-radius:8px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+  .kpi-bar{position:absolute;top:0;left:0;right:0;height:3px;}
+  .kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;font-family:var(--font-mono);margin-bottom:6px;}
+  .kpi-value{font-size:21px;font-weight:800;font-family:var(--font-mono);}
+  .kpi-value.cv-green{color:var(--green);}
+  .kpi-value.cv-red{color:var(--red);}
+  .kpi-value.cv-blue{color:var(--blue);}
+  .kpi-value.cv-orange{color:var(--orange);}
+  .kpi-sub{font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--font-mono);}
+
+  .grid-3{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:20px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+
+  .panel{background:var(--card);border:1px solid var(--border);padding:18px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+  .panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .panel-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:var(--text2);}
+  .panel-tag{font-size:10px;font-family:var(--font-mono);color:var(--muted);background:var(--panel);border:1px solid var(--border);padding:2px 8px;border-radius:3px;}
+
+  /* TABLE */
+  .expense-table{width:100%;border-collapse:collapse;}
+  .expense-table thead th{font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);font-family:var(--font-mono);padding:5px 8px;border-bottom:2px solid var(--border);text-align:left;background:var(--panel);}
+  .expense-table thead th:nth-child(n+3){text-align:right;}
+  .expense-table td{padding:7px 8px;font-size:12px;font-family:var(--font-mono);border-bottom:1px solid var(--border);color:var(--text);}
+  .expense-table tbody tr:last-child td{border-bottom:none;}
+  .expense-table tbody tr:hover td{background:#f9fafc;}
+  .expense-table tfoot td{border-top:2px solid var(--border2);background:var(--panel);}
+
+  /* editable cells */
+  .cell-edit{position:relative;}
+  .cell-edit input{background:transparent;border:none;border-bottom:1.5px solid transparent;color:var(--text);font-family:var(--font-mono);font-size:12px;width:100%;text-align:right;outline:none;padding:1px 2px;transition:border-color 0.15s;cursor:pointer;}
+  .cell-edit input:hover{border-bottom-color:var(--border2);}
+  .cell-edit input:focus{border-bottom-color:var(--accent);background:var(--accent-light);}
+  .cell-edit.presup-cell input{color:var(--text2);}
+  .cell-edit.presup-cell input.edited{color:var(--purple);font-weight:700;}
+  .cell-edit.presup-cell input.from-prev{color:var(--blue);font-style:italic;}
+
+  /* diff */
+  .diff-pos{color:var(--green);font-weight:700;}
+  .diff-neg{color:var(--red);font-weight:700;}
+  .diff-zero{color:var(--muted2);}
+
+  /* cat badges */
+  .cat-tag{display:inline-block;font-size:9px;padding:2px 6px;border-radius:3px;font-family:var(--font-mono);text-transform:uppercase;font-weight:700;}
+  .cat-fijo{background:#eff6ff;color:#1d4ed8;}
+  .cat-variable{background:#fffbeb;color:#b45309;}
+  .cat-deuda{background:#fef2f2;color:#b91c1c;}
+  .cat-ahorro{background:#f0fdf4;color:#15803d;}
+  .cat-extra{background:#f5f3ff;color:#6d28d9;}
+
+  .row-extra td{background:#fafaf7;}
+  .row-extra:hover td{background:#f5f5f0!important;}
+
+  /* add row */
+  .add-row{background:var(--panel);}
+  .add-row td{padding:6px 8px;border-top:1.5px dashed var(--border2)!important;}
+  .add-row input,.add-row select{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:4px 7px;outline:none;border-radius:3px;width:100%;}
+  .add-row input:focus,.add-row select:focus{border-color:var(--accent);}
+  .btn-add{background:var(--accent-light);border:1px solid var(--accent);color:var(--accent);font-family:var(--font-mono);font-size:10px;padding:4px 12px;cursor:pointer;text-transform:uppercase;letter-spacing:0.06em;border-radius:3px;font-weight:700;transition:all 0.15s;}
+  .btn-add:hover{background:var(--accent);color:#fff;}
+  .del-btn{background:transparent;border:none;color:var(--muted2);cursor:pointer;font-size:13px;padding:1px 3px;border-radius:2px;transition:all 0.12s;}
+  .del-btn:hover{color:var(--red);background:var(--red-light);}
+
+  /* prev hint badge */
+  .prev-hint{display:inline-block;font-size:9px;font-family:var(--font-mono);color:var(--blue);background:var(--blue-light);border:1px solid #bfdbfe;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;cursor:help;}
+
+  /* BARS */
+  .progress-item{margin-bottom:10px;}
+  .progress-row{display:flex;justify-content:space-between;margin-bottom:3px;}
+  .progress-name{font-size:11px;font-family:var(--font-mono);color:var(--text2);}
+  .progress-vals{font-size:10px;color:var(--muted);font-family:var(--font-mono);}
+  .progress-track{height:6px;background:var(--panel);border-radius:3px;border:1px solid var(--border);overflow:hidden;}
+  .progress-fill{height:100%;border-radius:3px;transition:width 0.4s;}
+  .pf-ok{background:var(--green);}
+  .pf-warn{background:var(--orange);}
+  .pf-danger{background:var(--red);}
+  .bar-chart{display:flex;flex-direction:column;gap:6px;}
+  .bar-item{display:flex;align-items:center;gap:8px;}
+  .bar-label{font-size:10px;font-family:var(--font-mono);color:var(--muted);width:28px;text-align:right;}
+  .bar-track{flex:1;height:16px;background:var(--panel);border-radius:3px;border:1px solid var(--border);overflow:hidden;}
+  .bar-fill{height:100%;display:flex;align-items:center;padding-left:5px;font-size:9px;font-family:var(--font-mono);font-weight:700;transition:width 0.5s;white-space:nowrap;overflow:hidden;border-radius:3px;}
+  .bar-amt{font-size:10px;font-family:var(--font-mono);color:var(--muted);width:75px;text-align:right;}
+
+  /* ALERT */
+  .alert{padding:9px 14px;margin-bottom:8px;border-left:3px solid;display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.5;border-radius:0 4px 4px 0;}
+  .alert.warn{background:var(--orange-light);border-left-color:var(--orange);}
+  .alert.danger{background:var(--red-light);border-left-color:var(--red);}
+  .alert.ok{background:var(--green-light);border-left-color:var(--green);}
+  .alert.info{background:var(--blue-light);border-left-color:var(--blue);}
+  .alert-icon{font-size:13px;flex-shrink:0;}
+
+  /* TABS */
+  .tabs{display:flex;border-bottom:2px solid var(--border);flex-wrap:wrap;background:var(--surface);border-radius:8px 8px 0 0;padding:0 4px;}
+  .tab{padding:9px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--muted);transition:all 0.15s;background:none;font-family:var(--font-display);}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .tab:hover:not(.active){color:var(--text2);}
+  .tab-content{display:none;padding-top:16px;}
+  .tab-content.active{display:block;}
+
+  /* CHECKLIST */
+  .checklist{list-style:none;}
+  .checklist li{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px;}
+  .checklist li:last-child{border-bottom:none;}
+  .check-box{width:17px;height:17px;border:2px solid var(--border2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all 0.15s;margin-top:1px;border-radius:3px;}
+  .check-box.checked{background:var(--green);border-color:var(--green);color:#fff;font-weight:700;}
+  .checklist li.done .check-desc>span{text-decoration:line-through;color:var(--muted);}
+  .check-desc{flex:1;line-height:1.5;color:var(--text2);}
+  .check-desc .sub{font-size:10px;color:var(--muted);font-family:var(--font-mono);margin-top:1px;}
+
+  /* DEBT */
+  .debt-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+  .debt-item:last-child{border-bottom:none;}
+  .debt-name{font-size:12px;font-weight:700;color:var(--text);}
+  .debt-meta{font-size:10px;color:var(--muted);font-family:var(--font-mono);margin-top:2px;}
+  .debt-amount .main{font-size:13px;font-weight:700;font-family:var(--font-mono);color:var(--red);}
+  .debt-amount .payment{font-size:10px;color:var(--muted);font-family:var(--font-mono);margin-top:1px;}
+
+  /* STRATEGY */
+  .strategy-list{list-style:none;}
+  .strategy-list li{padding:9px 12px;border-left:3px solid var(--border);margin-bottom:7px;font-size:12px;line-height:1.5;background:var(--panel);border-radius:0 4px 4px 0;color:var(--text2);}
+  .strategy-list li.p1{border-left-color:var(--red);}
+  .strategy-list li.p2{border-left-color:var(--orange);}
+  .strategy-list li.p3{border-left-color:var(--green);}
+  .strategy-list li strong{display:block;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-family:var(--font-mono);margin-bottom:3px;}
+
+  /* DEPTO */
+  .depto-card{background:var(--panel);border:1px solid var(--border);padding:14px;border-radius:6px;margin-bottom:10px;}
+  .depto-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .depto-name{font-size:12px;font-weight:700;color:var(--text);}
+  .depto-status{font-size:9px;font-family:var(--font-mono);padding:2px 8px;border-radius:10px;font-weight:700;}
+  .s-activo{background:var(--green-light);color:var(--green);border:1px solid #86efac;}
+  .s-inactivo{background:var(--panel);color:var(--muted);border:1px solid var(--border);}
+  .depto-row{display:flex;justify-content:space-between;font-size:11px;font-family:var(--font-mono);margin-bottom:5px;align-items:center;}
+  .depto-row span:first-child{color:var(--muted);}
+  .depto-input{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:11px;width:110px;text-align:right;outline:none;padding:3px 6px;border-radius:3px;}
+  .depto-input:focus{border-color:var(--accent);}
+
+  /* STATUS DOT */
+  .sdot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;}
+  .sdot-g{background:var(--green);}
+  .sdot-r{background:var(--red);}
+  .sdot-y{background:var(--orange);}
+
+  /* MISC */
+  .notes-area{width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:10px;resize:vertical;min-height:80px;outline:none;line-height:1.6;border-radius:4px;}
+  .notes-area:focus{border-color:var(--accent);}
+  .editable-badge{font-size:9px;font-family:var(--font-mono);color:var(--muted);padding:2px 6px;border:1px dashed var(--border2);border-radius:3px;margin-left:6px;}
+  .month-nav{display:flex;gap:4px;flex-wrap:wrap;}
+  .month-btn{padding:4px 10px;font-size:10px;font-family:var(--font-mono);cursor:pointer;border:1px solid var(--border);background:var(--panel);color:var(--muted);transition:all 0.12s;text-transform:uppercase;border-radius:4px;}
+  .month-btn.active{border-color:var(--accent);color:var(--accent);background:var(--blue-light);font-weight:700;}
+  .month-btn.locked{color:var(--muted2);border-color:var(--border);cursor:default;opacity:0.4;}
+  .month-btn:hover:not(.active):not(.locked){border-color:var(--text2);color:var(--text2);}
+  .footer{padding:12px 24px;border-top:1px solid var(--border);font-size:10px;font-family:var(--font-mono);color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;background:var(--surface);}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:none;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--card);border:1px solid var(--border);padding:26px;max-width:460px;width:100%;margin:16px;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.12);}
+  .modal h2{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;color:var(--text);}
+  .modal p{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:16px;font-family:var(--font-mono);}
+  .modal-btns{display:flex;gap:8px;justify-content:flex-end;}
+
+  input[type=text],input[type=number],select{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 10px;font-family:var(--font-mono);font-size:11px;outline:none;border-radius:3px;}
+  input:focus,select:focus{border-color:var(--accent);}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .panel,.kpi{animation:fadeIn 0.2s ease both;}
+  @media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr);}.grid-3,.grid-2{grid-template-columns:1fr;}}
+  @media(max-width:540px){.kpi-row{grid-template-columns:1fr;}.container{padding:12px;}}
+</style>
+</head>
+<body>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">Conectar Google Drive</h2>
+    <p id="modalMsg"></p>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-accent" id="modalConfirm">Conectar</button>
+    </div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">RRS</div>
+    <div>
+      <div class="logo-text">Control Financiero Personal</div>
+      <div class="logo-sub">PLAN ANUAL 2026</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="month-nav" id="monthNav"></div>
+    <div class="sync-badge" id="syncBadge" onclick="handleSyncClick()" title="Sincronizar con Drive">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLabel">Sin Drive</span>
+    </div>
+    <button class="btn btn-outline" onclick="exportCSV()">↓ CSV</button>
+  </div>
+</div>
+
+<div class="container">
+  <div id="alertArea"></div>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-bar" style="background:var(--orange)"></div>
+      <div class="kpi-label">Ingreso Mensual</div>
+      <div class="kpi-value cv-orange">$2.900.000</div>
+      <div class="kpi-sub">Ingreso neto personal</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-bar" style="background:var(--blue)"></div>
+      <div class="kpi-label">Gasto Presupuestado</div>
+      <div class="kpi-value cv-blue" id="kpi-presup">—</div>
+      <div class="kpi-sub" id="kpi-presup-pct">—% del ingreso</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-bar" id="kpi-bal-bar" style="background:var(--green)"></div>
+      <div class="kpi-label">Balance Proyectado</div>
+      <div class="kpi-value" id="kpi-balance">—</div>
+      <div class="kpi-sub">Margen disponible</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-bar" style="background:var(--purple)"></div>
+      <div class="kpi-label">Ahorro Acumulado</div>
+      <div class="kpi-value" style="color:var(--purple)" id="kpi-ahorro">—</div>
+      <div class="kpi-sub">Proyectado dic 2026</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('seguimiento')">📊 Seguimiento</button>
+    <button class="tab" onclick="switchTab('deptos')">🏠 Deptos</button>
+    <button class="tab" onclick="switchTab('deudas')">🔴 Deudas</button>
+    <button class="tab" onclick="switchTab('estrategia')">⚡ Estrategia</button>
+    <button class="tab" onclick="switchTab('checklist')">✅ Revisión</button>
+  </div>
+
+  <!-- SEGUIMIENTO -->
+  <div class="tab-content active" id="tab-seguimiento">
+    <div id="lockedBanner" style="display:none"></div>
+    <div class="grid-3">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Gastos del Mes <span class="editable-badge" id="editBadge">EDITABLE</span></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="prevHintMsg" style="font-size:10px;font-family:var(--font-mono);color:var(--blue);display:none">← presupuesto autocompletado desde mes anterior</span>
+            <div class="panel-tag" id="month-label-table">Ene '26</div>
+          </div>
+        </div>
+        <table class="expense-table" id="expenseTable">
+          <thead>
+            <tr>
+              <th>Ítem</th><th>Cat.</th>
+              <th style="text-align:right">Presup.<span style="color:var(--muted2);font-weight:400;margin-left:3px">(editable)</span></th>
+              <th style="text-align:right">Real</th>
+              <th style="text-align:right">Dif.</th>
+              <th style="width:24px"></th>
+            </tr>
+          </thead>
+          <tbody id="expenseBody"></tbody>
+          <tfoot>
+            <tr class="add-row" id="addRow">
+              <td><input type="text" id="newItemName" placeholder="Nombre del gasto..." style="width:100%"></td>
+              <td><select id="newItemCat"><option value="variable">Variable</option><option value="fijo">Fijo</option><option value="deuda">Deuda</option><option value="ahorro">Ahorro</option></select></td>
+              <td><input type="number" id="newItemPresup" placeholder="Presup." style="text-align:right;width:100%"></td>
+              <td><input type="number" id="newItemReal" placeholder="Real" style="text-align:right;width:100%"></td>
+              <td colspan="2" style="text-align:right"><button class="btn-add" onclick="addExtraItem()">+ Agregar</button></td>
+            </tr>
+            <tr style="background:var(--panel)">
+              <td colspan="2" style="font-weight:700;font-size:12px;padding:9px 8px;font-family:var(--font-mono);color:var(--text)">TOTAL</td>
+              <td style="text-align:right;padding:9px 8px;font-size:13px;font-weight:700;font-family:var(--font-mono);color:var(--text2)" id="total-presup"></td>
+              <td style="text-align:right;padding:9px 8px;font-size:13px;font-family:var(--font-mono)" id="total-real"></td>
+              <td style="text-align:right;padding:9px 8px;font-size:13px;font-weight:700;font-family:var(--font-mono)" id="total-diff"></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+        <div style="margin-top:12px">
+          <div style="font-size:10px;color:var(--muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">Notas del mes</div>
+          <textarea class="notes-area" id="notesArea" placeholder="Imprevistos, ajustes, compromisos..."></textarea>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Ahorro Acum. 2026</div>
+            <div class="panel-tag">Ene → Dic</div>
+          </div>
+          <div class="bar-chart" id="savingsChart"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Por Categoría</div>
+            <div class="panel-tag" id="cat-month-label">Ene</div>
+          </div>
+          <div id="catProgress"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEPTOS -->
+  <div class="tab-content" id="tab-deptos">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Control Propiedades</div>
+          <div class="panel-tag" id="depto-month-label">Ene '26</div>
+        </div>
+        <div id="deptoCards"></div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:10px;font-family:var(--font-mono);color:var(--muted)">NETO PROPIEDADES</span>
+          <span style="font-size:15px;font-weight:700;font-family:var(--font-mono)" id="totalDeptoIngreso">—</span>
+        </div>
+        <div style="margin-top:10px;padding:10px 12px;background:var(--blue-light);border-left:3px solid var(--blue);font-size:11px;line-height:1.6;font-family:var(--font-mono);color:var(--text2);border-radius:0 4px 4px 0">
+          Ingresos de propiedades son <strong>independientes</strong> del presupuesto personal. Excedente → fondo de emergencia.
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Historial Cobros</div></div>
+        <div class="bar-chart" id="deptoHistorial"></div>
+        <div style="margin-top:14px">
+          <div style="font-size:10px;font-family:var(--font-mono);color:var(--muted);text-transform:uppercase;margin-bottom:6px">Notas propiedades</div>
+          <textarea class="notes-area" id="deptoNotes" placeholder="Arriendos pendientes, reparaciones, acuerdos..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEUDAS -->
+  <div class="tab-content" id="tab-deudas">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Deudas Activas</div>
+          <div class="panel-tag">A Liquidar</div>
+        </div>
+        <div id="debtList"></div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between">
+          <span style="font-size:10px;font-family:var(--font-mono);color:var(--muted)">TOTAL DEUDA</span>
+          <span style="font-size:14px;font-weight:700;font-family:var(--font-mono);color:var(--red)" id="totalDebt">$0</span>
+        </div>
+        <div style="margin-top:14px">
+          <div style="font-size:10px;font-family:var(--font-mono);color:var(--muted);text-transform:uppercase;margin-bottom:7px">Agregar Deuda</div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <input id="newDebtName" type="text" placeholder="Nombre" style="flex:1;min-width:100px">
+            <input id="newDebtAmt" type="number" placeholder="Saldo total" style="width:105px">
+            <input id="newDebtPago" type="number" placeholder="Pago/mes" style="width:105px">
+            <button class="btn btn-accent" onclick="addDebt()" style="padding:5px 12px;font-size:11px">+ AGREGAR</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Plan Liquidación</div></div>
+        <div id="debtPlan"></div>
+        <div style="margin-top:14px;padding:12px;background:var(--green-light);border-left:3px solid var(--green);border-radius:0 4px 4px 0">
+          <div style="font-size:10px;font-family:var(--font-mono);color:var(--muted);text-transform:uppercase;margin-bottom:4px">Método · Avalancha</div>
+          <div style="font-size:12px;line-height:1.6;color:var(--text2)">Paga mínimo en todas, concentra el excedente en la deuda de <strong>mayor interés</strong> primero. Con ~$458K de balance puedes acelerar significativamente.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTRATEGIA -->
+  <div class="tab-content" id="tab-estrategia">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🎯 Objetivos 2026</div></div>
+        <div id="objetivos"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">⚡ Acciones Prioritarias</div></div>
+        <ul class="strategy-list">
+          <li class="p1"><strong>P1 · Tarjeta de Crédito</strong>Dic'25 $400K + Ene'26 $200K + Feb'26 $200K. Liquidada Feb. Desde Mar'26: $200K/mes liberados → ahorro.</li>
+          <li class="p1"><strong>P1 · Deuda Papá</strong>$150K/mes hasta Mar'26, $200K desde Abr'26. Definir fecha exacta de liquidación.</li>
+          <li class="p2"><strong>P2 · Ahorro Programado</strong>$200K→$400K escalonado. No tocar. Meta anual: $4.1M proyectado.</li>
+          <li class="p2"><strong>P2 · Gastos Variables</strong>Supermercado + ferias = $530K/mes. Potencial -$50-80K rotando a La Vega.</li>
+          <li class="p3"><strong>P3 · Propiedades</strong>Depto 1022 + 609 = $720K/mes potencial. Control en pestaña Deptos, separado del presupuesto personal.</li>
+          <li class="p3"><strong>P3 · Suscripciones</strong>Xbox y Netflix cancelados. Total activo: $39.530/mes. Revisar si ChatGPT tiene plan mejor.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div class="tab-content" id="tab-checklist">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Checklist Cierre de Mes</div>
+          <button class="btn btn-outline" onclick="resetChecklist()" style="font-size:10px;padding:4px 10px">RESET</button>
+        </div>
+        <ul class="checklist" id="checklistEl"></ul>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Reglas de Oro</div></div>
+        <ul class="strategy-list">
+          <li class="p3"><strong>Regla 1 · Ahorro primero</strong>Se transfiere el día 1. No postergable. Si el mes falló, analiza QUÉ falló — no cortes el ahorro.</li>
+          <li class="p3"><strong>Regla 2 · Registra gastos &gt;$50K</strong>Todo gasto no presupuestado mayor a $50.000 se anota antes de ejecutarse.</li>
+          <li class="p3"><strong>Regla 3 · Deudas antes que variables</strong>Después del ahorro, deuda Papá y tarjeta van antes de cualquier extra.</li>
+          <li class="p3"><strong>Regla 4 · Revisión el día 28</strong>Abrir dashboard, actualizar "Real", completar checklist, definir ajuste del mes siguiente.</li>
+          <li class="p2"><strong>Regla 5 · Propiedades = fondo separado</strong>Arriendos van directo a fondo emergencia hasta ~$7.3M. No mezclar con consumo personal.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>RRS · Control Financiero Personal 2026</span>
+  <span id="lastSaved">Sin cambios</span>
+</div>
+
+<script>
+// ========================
+// CONSTANTES
+// ========================
+const MESES = ['Dic\'25','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MESES_BLOQUEADOS = [0];
+const INGRESO = 2900000;
+const GDRIVE_FILE = 'rrs_finanzas_2026.json';
+// Meses desde Jun (idx 6) usan real del mes anterior como presupuesto por defecto
+const AUTOPRESUP_DESDE = 6;
+
+// Presupuestos base originales (solo referencia para meses Ene-May)
+const GASTOS_BASE = [
+  { name:'Ahorro',        cat:'ahorro',   vals:[150000,200000,200000,250000,300000,350000,400000,400000,400000,400000,400000,400000,400000] },
+  { name:'Arriendo',      cat:'fijo',     vals:[800000,800000,800000,800000,800000,800000,800000,800000,800000,800000,800000,800000,800000] },
+  { name:'Amanda P.',     cat:'fijo',     vals:[150000,150000,150000,150000,150000,150000,150000,150000,150000,150000,150000,150000,150000] },
+  { name:'Amanda M.',     cat:'fijo',     vals:[20000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000] },
+  { name:'Supermercado',  cat:'variable', vals:[350000,350000,350000,350000,350000,350000,350000,350000,350000,350000,350000,350000,350000] },
+  { name:'La Vega',       cat:'variable', vals:[100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000] },
+  { name:'Ferias (x4)',   cat:'variable', vals:[80000,80000,80000,80000,80000,80000,80000,80000,80000,80000,80000,80000,80000] },
+  { name:'Celulares',     cat:'fijo',     vals:[19360,19360,19360,19360,19360,19360,19360,19360,19360,19360,19360,19360,19360] },
+  { name:'Internet',      cat:'fijo',     vals:[18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000,18000] },
+  { name:'Luz',           cat:'fijo',     vals:[41953,41953,41953,41953,41953,41953,41953,41953,41953,41953,41953,41953,41953] },
+  { name:'Agua',          cat:'fijo',     vals:[7740,7740,7740,7740,7740,7740,7740,7740,7740,7740,7740,7740,7740] },
+  { name:'Gas',           cat:'fijo',     vals:[65777,65777,65777,65777,65777,65777,65777,65777,65777,65777,65777,65777,65777] },
+  { name:'Tarjeta Cred.', cat:'deuda',    vals:[400000,200000,200000,0,0,0,0,0,0,0,0,0,0] },
+  { name:'Jardinero',     cat:'fijo',     vals:[30000,30000,30000,30000,30000,30000,30000,30000,30000,30000,30000,30000,30000] },
+  { name:'Ocio',          cat:'variable', vals:[100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000,100000] },
+  { name:'Suscripciones', cat:'fijo',     vals:[29000,29000,29000,29000,29000,29000,29000,29000,29000,29000,29000,29000,29000] },
+  { name:'Deuda Papá',    cat:'deuda',    vals:[150000,150000,150000,150000,200000,200000,200000,200000,200000,200000,200000,200000,200000] },
+  { name:'Cole Amanda',   cat:'fijo',     vals:[0,0,120000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000] },
+  { name:'Cuotas Rena',   cat:'fijo',     vals:[0,0,0,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000] },
+  { name:'Cuotas Fer',    cat:'fijo',     vals:[0,0,0,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000] },
+];
+
+const BALANCES_BASE = [388170,538170,118170,498170,558170,508170,458170,458170,458170,458170,458170,458170,458170];
+const AHORRO_ACUM   = [0,200000,400000,650000,950000,1300000,1700000,2100000,2500000,2900000,3300000,3700000,4100000];
+
+// ========================
+// STATE
+// ========================
+let currentMonth = 1;
+let realData    = {};  // {mi: {name: value}}
+let presupData  = {};  // {mi: {name: value}} — presupuestos editados manualmente
+let extraItems  = {};  // {mi: [{id,name,cat,presup,real}]}
+let notes       = {};
+let deptoData   = {};
+let deptoNotes  = {};
+let debts = [
+  { name:'Tarjeta Crédito', total:600000, pago:200000, color:'var(--red)',    note:'Últimas 3 cuotas (Dic25+Ene26+Feb26)' },
+  { name:'Deuda Papá',      total:2000000,pago:150000, color:'var(--orange)', note:'Sube a $200K desde Abr\'26' },
+];
+let checklist = [
+  { text:'Ingresar gastos reales de todos los ítems', sub:'Columna "Real" completada al cierre del mes', done:false },
+  { text:'Verificar transferencia de ahorro', sub:'Debe haberse hecho el día 1', done:false },
+  { text:'Revisar diferencia presupuesto vs real', sub:'Identificar ítems sobre presupuesto', done:false },
+  { text:'Pagar deuda Papá', sub:'$200K/mes desde Abr\'26', done:false },
+  { text:'Actualizar saldo tarjeta de crédito', sub:'Confirmar liquidación en Feb\'26', done:false },
+  { text:'Anotar gastos imprevistos en notas', sub:'Todo >$50K no presupuestado', done:false },
+  { text:'Actualizar control de deptos', sub:'Cobros, gastos y estado de arriendo', done:false },
+  { text:'Definir ajuste para el mes siguiente', sub:'¿Qué ítem variable se puede reducir?', done:false },
+];
+let objetivos = [
+  { text:'Liquidar tarjeta de crédito', target:'Feb \'26', done:false },
+  { text:'Ahorro acumulado $4.1M+', target:'Dic \'26', done:false },
+  { text:'Liquidar deuda Papá', target:'2027', done:false },
+  { text:'Activar arriendos deptos regulares', target:'Jun \'26', done:false },
+  { text:'Fondo emergencia 3 meses (~$7.3M)', target:'2027', done:false },
+];
+
+let driveToken  = null;
+let driveFileId = null;
+let syncTimeout = null;
+
+// ========================
+// UTILS
+// ========================
+const fmt = n => n===0?'—':'$'+Math.abs(n).toLocaleString('es-CL');
+const fmtSigned = n => {
+  if(n===0) return '<span class="diff-zero">—</span>';
+  if(n>0) return `<span class="diff-pos">+$${Math.abs(n).toLocaleString('es-CL')}</span>`;
+  return `<span class="diff-neg">-$${Math.abs(n).toLocaleString('es-CL')}</span>`;
+};
+const isLocked = mi => MESES_BLOQUEADOS.includes(mi);
+const uid = () => Math.random().toString(36).slice(2,9);
+
+// ========================
+// PRESUPUESTO: base + editable + autopresup
+// ========================
+function getPresup(mi, name) {
+  // 1. Manually edited?
+  if (presupData[mi] && presupData[mi][name] !== undefined) {
+    return { val: presupData[mi][name], source: 'edited' };
+  }
+  // 2. From Jun onwards: use real value of previous month if available
+  if (mi >= AUTOPRESUP_DESDE) {
+    const prevMi = mi - 1;
+    const prevReal = getRealVal(prevMi, name);
+    if (prevReal !== null) {
+      return { val: prevReal, source: 'prev' };
+    }
+  }
+  // 3. Base value
+  const g = GASTOS_BASE.find(x => x.name === name);
+  return { val: g ? g.vals[mi] : 0, source: 'base' };
+}
+
+function setPresup(mi, name, val) {
+  if (!presupData[mi]) presupData[mi] = {};
+  presupData[mi][name] = val;
+  scheduleSave();
+  updateTotals(); updateKPIs(); updateAlerts();
+}
+
+// ========================
+// REAL DATA
+// ========================
+function getRealVal(mi, name) {
+  if (isLocked(mi)) return null;
+  return (realData[mi] && realData[mi][name] !== undefined) ? realData[mi][name] : null;
+}
+function setRealVal(mi, name, val) {
+  if (isLocked(mi)) return;
+  if (!realData[mi]) realData[mi] = {};
+  realData[mi][name] = val;
+  scheduleSave();
+  updateTotals(); updateKPIs(); updateCatProgress(); updateAlerts();
+}
+
+function getExtras(mi) { return extraItems[mi] || []; }
+function setExtras(mi, arr) { extraItems[mi] = arr; scheduleSave(); }
+
+// ========================
+// MONTH NAV
+// ========================
+function buildMonthNav() {
+  const nav = document.getElementById('monthNav');
+  nav.innerHTML = '';
+  MESES.forEach((m, i) => {
+    if (i === 0) return;
+    const b = document.createElement('button');
+    b.className = 'month-btn' + (i === currentMonth ? ' active' : '');
+    b.textContent = m;
+    b.onclick = () => { currentMonth = i; render(); };
+    nav.appendChild(b);
+  });
+}
+
+// ========================
+// EXPENSE TABLE
+// ========================
+function renderExpenseTable() {
+  const body = document.getElementById('expenseBody');
+  body.innerHTML = '';
+  const mi = currentMonth;
+  const locked = isLocked(mi);
+  const useAutoPrev = mi >= AUTOPRESUP_DESDE;
+
+  document.getElementById('lockedBanner').style.display = locked ? 'block' : 'none';
+  document.getElementById('editBadge').style.display = locked ? 'none' : 'inline';
+  document.getElementById('month-label-table').textContent = MESES[mi] + (mi >= 1 ? " '26" : '');
+  document.getElementById('prevHintMsg').style.display = (useAutoPrev && !locked) ? 'inline' : 'none';
+
+  GASTOS_BASE.forEach(g => {
+    const pData = getPresup(mi, g.name);
+    const presup = pData.val;
+    if (presup === 0 && g.cat !== 'deuda') return;
+    const real = getRealVal(mi, g.name);
+    const diff = (real !== null && presup !== null) ? (presup - real) : null;
+    const catLabel = { fijo: 'FIJO', variable: 'VAR', deuda: 'DEUDA', ahorro: 'AHORRO' }[g.cat];
+
+    const isEdited = pData.source === 'edited';
+    const isFromPrev = pData.source === 'prev';
+    const presupClass = isEdited ? 'edited' : isFromPrev ? 'from-prev' : '';
+    const prevTip = isFromPrev ? ' title="Autocompletado desde real del mes anterior"' : '';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:var(--text2)">${g.name}${isFromPrev ? '<span class="prev-hint" title="Real del mes anterior">↩prev</span>' : ''}</td>
+      <td><span class="cat-tag cat-${g.cat}">${catLabel}</span></td>
+      <td class="cell-edit presup-cell">
+        ${locked ? `<span style="float:right;color:var(--text2)">${fmt(presup)}</span>` :
+        `<input type="text" class="${presupClass}" value="${presup ? presup.toLocaleString('es-CL') : ''}"
+          placeholder="0" data-name="${g.name}"${prevTip}
+          onchange="handlePresupChange(this,${mi})"
+          onkeydown="if(event.key==='Enter')this.blur()">`}
+      </td>
+      <td class="cell-edit">
+        ${locked ? `<span style="float:right;color:var(--muted)">—</span>` :
+        `<input type="text" value="${real !== null ? real.toLocaleString('es-CL') : ''}"
+          placeholder="${presup ? '$' + presup.toLocaleString('es-CL') : '0'}"
+          data-name="${g.name}"
+          onchange="handleRealChange(this,${mi})"
+          onkeydown="if(event.key==='Enter')this.blur()">`}
+      </td>
+      <td style="text-align:right">${diff !== null ? fmtSigned(diff) : '<span class="diff-zero">—</span>'}</td>
+      <td></td>`;
+    body.appendChild(tr);
+  });
+
+  // Extra items
+  getExtras(mi).forEach((item, idx) => {
+    const diff = (item.presup !== undefined && item.real !== undefined) ? (item.presup - item.real) : null;
+    const catLabel = { fijo: 'FIJO', variable: 'VAR', deuda: 'DEUDA', ahorro: 'AHORRO' }[item.cat] || 'EXTRA';
+    const tr = document.createElement('tr');
+    tr.className = 'row-extra';
+    tr.innerHTML = `
+      <td style="color:var(--text2)">${item.name}</td>
+      <td><span class="cat-tag cat-${item.cat}">${catLabel}</span></td>
+      <td class="cell-edit presup-cell">
+        ${locked ? `<span style="float:right">${item.presup ? '$' + item.presup.toLocaleString('es-CL') : '—'}</span>` :
+        `<input type="text" value="${item.presup ? item.presup.toLocaleString('es-CL') : ''}" placeholder="0"
+          onchange="updateExtraPresup(${mi},${idx},this.value)"
+          onkeydown="if(event.key==='Enter')this.blur()">`}
+      </td>
+      <td class="cell-edit">
+        ${locked ? `<span style="float:right">${item.real !== undefined ? '$' + item.real.toLocaleString('es-CL') : '—'}</span>` :
+        `<input type="text" value="${item.real !== undefined ? item.real.toLocaleString('es-CL') : ''}" placeholder="0"
+          onchange="updateExtraReal(${mi},${idx},this.value)"
+          onkeydown="if(event.key==='Enter')this.blur()">`}
+      </td>
+      <td style="text-align:right">${diff !== null ? fmtSigned(diff) : '<span class="diff-zero">—</span>'}</td>
+      <td>${locked ? '' : `<button class="del-btn" onclick="deleteExtra(${mi},${idx})" title="Eliminar">×</button>`}</td>`;
+    body.appendChild(tr);
+  });
+
+  updateTotals();
+}
+
+function handlePresupChange(input, mi) {
+  const val = parseFloat(input.value.replace(/\./g, '').replace(',', '.')) || 0;
+  setPresup(mi, input.dataset.name, val);
+  input.classList.add('edited');
+  input.classList.remove('from-prev');
+  // Update diff in same row
+  const real = getRealVal(mi, input.dataset.name);
+  if (real !== null) {
+    input.closest('tr').querySelector('td:nth-child(5)').innerHTML = fmtSigned(val - real);
+  }
+}
+
+function handleRealChange(input, mi) {
+  if (isLocked(mi)) return;
+  const val = parseFloat(input.value.replace(/\./g, '').replace(',', '.')) || 0;
+  setRealVal(mi, input.dataset.name, val);
+  const pData = getPresup(mi, input.dataset.name);
+  input.closest('tr').querySelector('td:nth-child(5)').innerHTML = fmtSigned(pData.val - val);
+}
+
+function addExtraItem() {
+  const mi = currentMonth;
+  if (isLocked(mi)) return;
+  const name = document.getElementById('newItemName').value.trim();
+  if (!name) return;
+  const cat    = document.getElementById('newItemCat').value;
+  const presup = parseFloat(document.getElementById('newItemPresup').value) || 0;
+  const realV  = document.getElementById('newItemReal').value;
+  const real   = realV !== '' ? (parseFloat(realV) || 0) : undefined;
+  const extras = getExtras(mi);
+  extras.push({ id: uid(), name, cat, presup, real });
+  setExtras(mi, extras);
+  ['newItemName','newItemPresup','newItemReal'].forEach(id => document.getElementById(id).value = '');
+  renderExpenseTable(); updateTotals(); updateKPIs(); updateCatProgress();
+}
+
+function updateExtraPresup(mi, idx, raw) {
+  const val = parseFloat(raw.replace(/\./g, '').replace(',', '.')) || 0;
+  const extras = getExtras(mi);
+  if (extras[idx]) extras[idx].presup = val;
+  setExtras(mi, extras);
+  updateTotals(); updateKPIs();
+}
+function updateExtraReal(mi, idx, raw) {
+  const val = parseFloat(raw.replace(/\./g, '').replace(',', '.')) || 0;
+  const extras = getExtras(mi);
+  if (extras[idx]) extras[idx].real = val;
+  setExtras(mi, extras);
+  updateTotals(); updateKPIs(); updateCatProgress();
+}
+function deleteExtra(mi, idx) {
+  const extras = getExtras(mi);
+  extras.splice(idx, 1);
+  setExtras(mi, extras);
+  renderExpenseTable(); updateTotals(); updateKPIs(); updateCatProgress();
+}
+
+// ========================
+// TOTALS + KPIs
+// ========================
+function updateTotals() {
+  const mi = currentMonth;
+  let presupTotal = 0;
+  GASTOS_BASE.forEach(g => {
+    const p = getPresup(mi, g.name);
+    presupTotal += p.val || 0;
+  });
+  presupTotal += getExtras(mi).reduce((s, e) => s + (e.presup || 0), 0);
+
+  let real = 0; let hasReal = false;
+  if (!isLocked(mi)) {
+    GASTOS_BASE.forEach(g => { const v = getRealVal(mi, g.name); if (v !== null) { real += v; hasReal = true; } });
+    getExtras(mi).forEach(e => { if (e.real !== undefined) { real += e.real; hasReal = true; } });
+  }
+
+  document.getElementById('total-presup').textContent = '$' + presupTotal.toLocaleString('es-CL');
+  document.getElementById('total-real').innerHTML = hasReal
+    ? '$' + real.toLocaleString('es-CL')
+    : '<span style="color:var(--muted)">—</span>';
+  document.getElementById('total-diff').innerHTML = hasReal ? fmtSigned(presupTotal - real) : '<span style="color:var(--muted)">—</span>';
+}
+
+function updateKPIs() {
+  const mi = currentMonth;
+  let presupTotal = 0;
+  GASTOS_BASE.forEach(g => { presupTotal += getPresup(mi, g.name).val || 0; });
+  presupTotal += getExtras(mi).reduce((s, e) => s + (e.presup || 0), 0);
+  const pct = Math.round(presupTotal / INGRESO * 100);
+  const bal = INGRESO - presupTotal;
+
+  document.getElementById('kpi-presup').textContent = '$' + presupTotal.toLocaleString('es-CL');
+  document.getElementById('kpi-presup-pct').textContent = pct + '% del ingreso';
+  const balEl = document.getElementById('kpi-balance');
+  balEl.textContent = (bal >= 0 ? '+' : '') + '$' + Math.abs(bal).toLocaleString('es-CL');
+  balEl.className = 'kpi-value ' + (bal >= 0 ? 'cv-green' : 'cv-red');
+  document.getElementById('kpi-bal-bar').style.background = bal >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('kpi-ahorro').textContent = '$' + AHORRO_ACUM[mi].toLocaleString('es-CL');
+}
+
+// ========================
+// SAVINGS CHART
+// ========================
+function renderSavingsChart() {
+  const el = document.getElementById('savingsChart');
+  el.innerHTML = '';
+  const max = Math.max(...AHORRO_ACUM.slice(1));
+  for (let idx = 1; idx <= 12; idx++) {
+    const val = AHORRO_ACUM[idx];
+    const pct = val / max * 100;
+    const past = idx <= currentMonth;
+    const div = document.createElement('div');
+    div.className = 'bar-item';
+    div.innerHTML = `
+      <div class="bar-label">${MESES[idx]}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%;background:${past ? 'var(--purple)' : '#e2d9f3'};color:${past ? '#fff' : 'var(--muted)'}">
+          ${val > 400000 ? '$' + Math.round(val / 1000) + 'K' : ''}
+        </div>
+      </div>
+      <div class="bar-amt" style="color:${past ? 'var(--purple)' : 'var(--muted)'}">$${Math.round(val / 1000)}K</div>`;
+    el.appendChild(div);
+  }
+}
+
+// ========================
+// CAT PROGRESS
+// ========================
+function updateCatProgress() {
+  const el = document.getElementById('catProgress');
+  el.innerHTML = '';
+  document.getElementById('cat-month-label').textContent = MESES[currentMonth];
+  if (isLocked(currentMonth)) { el.innerHTML = '<div style="font-size:11px;color:var(--muted);font-family:var(--font-mono);padding:6px 0">Mes bloqueado</div>'; return; }
+  const mi = currentMonth;
+  const cats = ['fijo','variable','deuda','ahorro'];
+  const catNames = { fijo: 'Fijos', variable: 'Variables', deuda: 'Deudas', ahorro: 'Ahorro' };
+  const catColors = { fijo: 'var(--blue)', variable: 'var(--orange)', deuda: 'var(--red)', ahorro: 'var(--green)' };
+
+  cats.forEach(cat => {
+    const items = GASTOS_BASE.filter(g => g.cat === cat);
+    const presup = items.reduce((s, g) => s + (getPresup(mi, g.name).val || 0), 0)
+      + getExtras(mi).filter(e => e.cat === cat).reduce((s, e) => s + (e.presup || 0), 0);
+    if (presup === 0) return;
+    const real = items.reduce((s, g) => { const v = getRealVal(mi, g.name); return v !== null ? s + v : s; }, 0)
+      + getExtras(mi).filter(e => e.cat === cat).reduce((s, e) => s + (e.real || 0), 0);
+    const hasReal = items.some(g => getRealVal(mi, g.name) !== null);
+    const pct = hasReal && presup > 0 ? Math.min(Math.round(real / presup * 100), 150) : 0;
+    const cls = pct > 110 ? 'pf-danger' : pct > 85 ? 'pf-warn' : 'pf-ok';
+    const div = document.createElement('div');
+    div.className = 'progress-item';
+    div.innerHTML = `
+      <div class="progress-row">
+        <span class="progress-name">${catNames[cat]}</span>
+        <span class="progress-vals">${hasReal ? '$' + real.toLocaleString('es-CL') : ''} / $${presup.toLocaleString('es-CL')}</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill ${cls}" style="width:${pct}%;background:${catColors[cat]}"></div>
+      </div>`;
+    el.appendChild(div);
+  });
+}
+
+// ========================
+// DEPTOS
+// ========================
+function getDeptoData(mi) { return deptoData[mi] || { d1022_cobrado:0, d1022_gasto:0, d609_cobrado:0, d609_gasto:0 }; }
+function setDeptoField(mi, field, val) {
+  if (!deptoData[mi]) deptoData[mi] = getDeptoData(mi);
+  deptoData[mi][field] = val;
+  scheduleSave(); renderDeptos(); renderDeptoHistorial();
+}
+function renderDeptos() {
+  const mi = currentMonth;
+  document.getElementById('depto-month-label').textContent = MESES[mi] + (mi >= 1 ? " '26" : '');
+  const d = getDeptoData(mi);
+  const deptos = [
+    { id: '1022', label: 'Depto 1022', presup: 370000, cobrado: d.d1022_cobrado, gasto: d.d1022_gasto },
+    { id: '609',  label: 'Depto 609',  presup: 350000, cobrado: d.d609_cobrado,  gasto: d.d609_gasto },
+  ];
+  const el = document.getElementById('deptoCards');
+  el.innerHTML = '';
+  let totalNeto = 0;
+  deptos.forEach(dep => {
+    const saldo = dep.cobrado - dep.gasto;
+    totalNeto += saldo;
+    el.innerHTML += `
+      <div class="depto-card">
+        <div class="depto-header">
+          <div class="depto-name">${dep.label}</div>
+          <span class="depto-status ${dep.cobrado > 0 ? 's-activo' : 's-inactivo'}">${dep.cobrado > 0 ? 'COBRADO' : 'PENDIENTE'}</span>
+        </div>
+        <div class="depto-row"><span>Presupuestado</span><span>$${dep.presup.toLocaleString('es-CL')}</span></div>
+        <div class="depto-row"><span>Cobrado</span>
+          <input class="depto-input" type="text" value="${dep.cobrado ? dep.cobrado.toLocaleString('es-CL') : ''}" placeholder="$0"
+            onchange="setDeptoField(${mi},'d${dep.id}_cobrado',parseFloat(this.value.replace(/\\./g,''))||0)"
+            onkeydown="if(event.key==='Enter')this.blur()">
+        </div>
+        <div class="depto-row"><span>Gastos</span>
+          <input class="depto-input" type="text" value="${dep.gasto ? dep.gasto.toLocaleString('es-CL') : ''}" placeholder="$0"
+            onchange="setDeptoField(${mi},'d${dep.id}_gasto',parseFloat(this.value.replace(/\\./g,''))||0)"
+            onkeydown="if(event.key==='Enter')this.blur()">
+        </div>
+        <div class="depto-row" style="padding-top:7px;border-top:1px solid var(--border);margin-top:4px;font-weight:700">
+          <span>Neto</span>
+          <span style="color:${saldo >= 0 ? 'var(--green)' : 'var(--red)'}">${saldo >= 0 ? '+' : ''}$${Math.abs(saldo).toLocaleString('es-CL')}</span>
+        </div>
+      </div>`;
+  });
+  const totalEl = document.getElementById('totalDeptoIngreso');
+  totalEl.textContent = (totalNeto >= 0 ? '+' : '') + '$' + Math.abs(totalNeto).toLocaleString('es-CL');
+  totalEl.style.color = totalNeto >= 0 ? 'var(--green)' : 'var(--red)';
+  const ta = document.getElementById('deptoNotes');
+  ta.value = deptoNotes[mi] || '';
+  ta.onchange = () => { deptoNotes[mi] = ta.value; scheduleSave(); };
+}
+function renderDeptoHistorial() {
+  const el = document.getElementById('deptoHistorial');
+  el.innerHTML = '';
+  let maxVal = 720000;
+  for (let i = 1; i <= 12; i++) { const d = getDeptoData(i); const t = (d.d1022_cobrado||0)+(d.d609_cobrado||0); if (t > maxVal) maxVal = t; }
+  for (let idx = 1; idx <= 12; idx++) {
+    const d = getDeptoData(idx);
+    const cobrado = (d.d1022_cobrado||0)+(d.d609_cobrado||0);
+    const pct = cobrado / maxVal * 100;
+    const div = document.createElement('div');
+    div.className = 'bar-item';
+    div.innerHTML = `
+      <div class="bar-label">${MESES[idx]}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--blue);color:#fff">${cobrado>200000?'$'+Math.round(cobrado/1000)+'K':''}</div></div>
+      <div class="bar-amt" style="color:${cobrado>0?'var(--blue)':'var(--muted)'}">${cobrado>0?'$'+Math.round(cobrado/1000)+'K':'—'}</div>`;
+    el.appendChild(div);
+  }
+}
+
+// ========================
+// DEBT
+// ========================
+function renderDebtList() {
+  const el = document.getElementById('debtList');
+  el.innerHTML = ''; let total = 0;
+  debts.forEach((d) => {
+    total += d.total;
+    const months = Math.ceil(d.total / d.pago);
+    el.innerHTML += `
+      <div class="debt-item">
+        <div>
+          <div class="debt-name"><span class="sdot" style="background:${d.color}"></span>${d.name}</div>
+          <div class="debt-meta">${d.note} · ~${months} mes${months !== 1 ? 'es' : ''}</div>
+        </div>
+        <div class="debt-amount">
+          <div class="main">$${d.total.toLocaleString('es-CL')}</div>
+          <div class="payment">$${d.pago.toLocaleString('es-CL')}/mes</div>
+        </div>
+      </div>`;
+  });
+  document.getElementById('totalDebt').textContent = '$' + total.toLocaleString('es-CL');
+  renderDebtPlan();
+}
+function renderDebtPlan() {
+  const el = document.getElementById('debtPlan'); el.innerHTML = '';
+  debts.forEach(d => {
+    const months = Math.ceil(d.total / d.pago);
+    const end = new Date(2026, 0, 1); end.setMonth(end.getMonth() + months);
+    const endStr = end.toLocaleDateString('es-CL', { month: 'short', year: 'numeric' });
+    el.innerHTML += `
+      <div style="margin-bottom:12px">
+        <div class="progress-row"><span class="progress-name">${d.name}</span><span class="progress-vals">Fin est.: ${endStr}</span></div>
+        <div class="progress-track"><div class="progress-fill pf-danger" style="width:100%;background:${d.color}"></div></div>
+      </div>`;
+  });
+}
+function addDebt() {
+  const name = document.getElementById('newDebtName').value.trim();
+  const amt  = parseFloat(document.getElementById('newDebtAmt').value) || 0;
+  const pago = parseFloat(document.getElementById('newDebtPago').value) || 0;
+  if (!name || !amt) return;
+  debts.push({ name, total: amt, pago: pago || amt, color: 'var(--orange)', note: 'Agregada manualmente' });
+  ['newDebtName','newDebtAmt','newDebtPago'].forEach(id => document.getElementById(id).value = '');
+  renderDebtList(); scheduleSave();
+}
+
+// ========================
+// OBJETIVOS + CHECKLIST
+// ========================
+function renderObjetivos() {
+  const el = document.getElementById('objetivos'); el.innerHTML = '';
+  objetivos.forEach((o, i) => {
+    el.innerHTML += `
+      <div class="debt-item" style="cursor:pointer" onclick="toggleObjetivo(${i})">
+        <div>
+          <div class="debt-name"><span class="sdot ${o.done ? 'sdot-g' : 'sdot-y'}"></span>
+            <span style="${o.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">${o.text}</span></div>
+          <div class="debt-meta">Meta: ${o.target}</div>
+        </div>
+        <span style="font-size:15px">${o.done ? '✅' : '⭕'}</span>
+      </div>`;
+  });
+}
+function toggleObjetivo(i) { objetivos[i].done = !objetivos[i].done; renderObjetivos(); scheduleSave(); }
+
+function renderChecklist() {
+  const el = document.getElementById('checklistEl'); el.innerHTML = '';
+  checklist.forEach((c, i) => {
+    el.innerHTML += `
+      <li class="${c.done ? 'done' : ''}">
+        <div class="check-box ${c.done ? 'checked' : ''}" onclick="toggleCheck(${i})">${c.done ? '✓' : ''}</div>
+        <div class="check-desc"><span>${c.text}</span><div class="sub">${c.sub}</div></div>
+      </li>`;
+  });
+}
+function toggleCheck(i) { checklist[i].done = !checklist[i].done; renderChecklist(); scheduleSave(); }
+function resetChecklist() { checklist.forEach(c => c.done = false); renderChecklist(); scheduleSave(); }
+
+// ========================
+// ALERTS
+// ========================
+function updateAlerts() {
+  const el = document.getElementById('alertArea');
+  const alerts = [];
+  const mi = currentMonth;
+  if (!isLocked(mi)) {
+    let presupTotal = 0;
+    GASTOS_BASE.forEach(g => { presupTotal += getPresup(mi, g.name).val || 0; });
+    presupTotal += getExtras(mi).reduce((s, e) => s + (e.presup || 0), 0);
+    const bal = INGRESO - presupTotal;
+    if (bal < 150000) alerts.push({ type:'danger', icon:'⚠', msg:`Balance proyectado crítico: $${bal.toLocaleString('es-CL')}. Revisar gastos variables.` });
+    else if (bal < 300000) alerts.push({ type:'warn', icon:'⚠', msg:`Balance bajo este mes: $${bal.toLocaleString('es-CL')}. Revisar variables.` });
+    const tarjeta = getPresup(mi, 'Tarjeta Cred.').val;
+    if (tarjeta > 0) alerts.push({ type:'warn', icon:'💳', msg:`Cuota tarjeta activa: $${tarjeta.toLocaleString('es-CL')}. Último pago Feb '26.` });
+    if (mi >= 3) alerts.push({ type:'ok', icon:'✅', msg:`Tarjeta liquidada desde Mar '26. $200K/mes liberados → redirigir a ahorro.` });
+    if (mi >= AUTOPRESUP_DESDE) alerts.push({ type:'info', icon:'ℹ', msg:`Jun–Dic: presupuesto predefinido desde el real del mes anterior. Puedes editarlo directo en la tabla.` });
+    const nExtras = getExtras(mi).length;
+    if (nExtras > 0) alerts.push({ type:'info', icon:'➕', msg:`${nExtras} gasto${nExtras > 1 ? 's' : ''} extra registrado${nExtras > 1 ? 's' : ''} este mes.` });
+  }
+  el.innerHTML = alerts.map(a => `<div class="alert ${a.type}"><span class="alert-icon">${a.icon}</span><span>${a.msg}</span></div>`).join('');
+}
+
+// ========================
+// TABS
+// ========================
+function switchTab(name) {
+  const tabs = ['seguimiento','deptos','deudas','estrategia','checklist'];
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', tabs[i] === name));
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-' + name));
+  if (name === 'deptos') { renderDeptos(); renderDeptoHistorial(); }
+}
+
+// ========================
+// GOOGLE DRIVE
+// ========================
+function handleSyncClick() {
+  if (driveToken) saveToDrive();
+  else openModal('Conectar Google Drive',
+    'Los datos se guardarán en <strong>rrs_finanzas_2026.json</strong> en tu Google Drive. Accesible desde cualquier navegador con tu cuenta Google.',
+    'Autorizar con Google', connectDrive);
+}
+function openModal(title, msg, btnLabel, fn) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalMsg').innerHTML = msg;
+  const btn = document.getElementById('modalConfirm');
+  btn.textContent = btnLabel;
+  btn.onclick = fn;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+function connectDrive() {
+  closeModal();
+  const clientId = '50061965881-5nf8tesvf0h888li0pm73gt6v9t26nn6.apps.googleusercontent.com';
+  if (!clientId) {
+    openModal('Configurar Google Drive',
+      `Para activar la sincronización con Drive:<br><br>
+      <code style="font-size:10px;color:var(--accent);line-height:2;display:block">
+      1. console.cloud.google.com<br>
+      2. APIs &amp; Services → Drive API → Habilitar<br>
+      3. Credenciales → OAuth 2.0 Client ID (Web)<br>
+      4. Authorized JS origins: dominio donde alojas este archivo<br>
+      5. Pega el Client ID en la variable clientId del código
+      </code><br>
+      <strong>Alternativa:</strong> usa ↓ CSV para exportar manualmente.`,
+      'Entendido', () => { closeModal(); setSyncState('', 'Sin configurar'); });
+    return;
+  }
+  setSyncState('syncing', 'Conectando...');
+  const params = new URLSearchParams({ client_id: clientId, redirect_uri: window.location.href.split('?')[0], response_type: 'token', scope: 'https://www.googleapis.com/auth/drive.file', prompt: 'consent' });
+  const popup = window.open('https://accounts.google.com/o/oauth2/v2/auth?' + params, 'oauth', 'width=500,height=600');
+  const timer = setInterval(() => {
+    try {
+      if (popup.closed) { clearInterval(timer); setSyncState('error', 'Cancelado'); return; }
+      const hash = popup.location.hash;
+      if (hash && hash.includes('access_token')) {
+        clearInterval(timer); popup.close();
+        const p = new URLSearchParams(hash.slice(1));
+        driveToken = p.get('access_token');
+        localStorage.setItem('rrs_drive_token', driveToken);
+        loadFromDrive();
+      }
+    } catch (e) {}
+  }, 500);
+}
+
+async function loadFromDrive() {
+  if (!driveToken) return;
+  setSyncState('syncing', 'Cargando...');
+  try {
+    const search = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE}' and trashed=false&fields=files(id,name)`, { headers: { Authorization: 'Bearer ' + driveToken } });
+    const data = await search.json();
+    if (data.files && data.files.length > 0) {
+      driveFileId = data.files[0].id;
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`, { headers: { Authorization: 'Bearer ' + driveToken } });
+      const saved = await res.json();
+      applyState(saved); render();
+      setSyncState('synced', 'Cargado ' + new Date().toLocaleTimeString('es-CL'));
+    } else {
+      setSyncState('synced', 'Drive listo');
+      await saveToDrive();
+    }
+  } catch (e) { setSyncState('error', 'Error Drive'); }
+}
+
+async function saveToDrive() {
+  if (!driveToken) { saveLocal(); return; }
+  setSyncState('syncing', 'Guardando...');
+  const body = JSON.stringify(getState());
+  try {
+    if (driveFileId) {
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, { method: 'PATCH', headers: { Authorization: 'Bearer ' + driveToken, 'Content-Type': 'application/json' }, body });
+    } else {
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify({ name: GDRIVE_FILE, mimeType: 'application/json' })], { type: 'application/json' }));
+      form.append('file', new Blob([body], { type: 'application/json' }));
+      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', headers: { Authorization: 'Bearer ' + driveToken }, body: form });
+      driveFileId = (await res.json()).id;
+    }
+    setSyncState('synced', 'Guardado ' + new Date().toLocaleTimeString('es-CL'));
+    saveLocal();
+  } catch (e) { setSyncState('error', 'Error al guardar'); saveLocal(); }
+}
+
+function setSyncState(state, label) {
+  document.getElementById('syncDot').className = 'sync-dot' + (state ? ' ' + state : '');
+  document.getElementById('syncLabel').textContent = label;
+  document.getElementById('lastSaved').textContent = label;
+}
+
+// ========================
+// PERSIST
+// ========================
+function getState() {
+  return { realData, presupData, extraItems, notes, deptoData, deptoNotes, debts, checklist, objetivos, currentMonth, _v: 3 };
+}
+function applyState(d) {
+  if (!d) return;
+  if (d.realData)    realData    = d.realData;
+  if (d.presupData)  presupData  = d.presupData;
+  if (d.extraItems)  extraItems  = d.extraItems;
+  if (d.notes)       notes       = d.notes;
+  if (d.deptoData)   deptoData   = d.deptoData;
+  if (d.deptoNotes)  deptoNotes  = d.deptoNotes;
+  if (d.debts)       debts       = d.debts;
+  if (d.checklist)   checklist   = d.checklist;
+  if (d.objetivos)   objetivos   = d.objetivos;
+  if (d.currentMonth !== undefined && !isLocked(d.currentMonth)) currentMonth = d.currentMonth;
+}
+function saveLocal() {
+  try { localStorage.setItem('rrs_2026_v3', JSON.stringify(getState())); } catch (e) {}
+}
+function loadLocal() {
+  try { applyState(JSON.parse(localStorage.getItem('rrs_2026_v3') || '{}')); } catch (e) {}
+  const t = localStorage.getItem('rrs_drive_token');
+  if (t) { driveToken = t; loadFromDrive(); }
+  else setSyncState('', 'Sin Drive');
+}
+function scheduleSave() {
+  saveLocal();
+  if (syncTimeout) clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(() => { if (driveToken) saveToDrive(); }, 1500);
+}
+
+// ========================
+// CSV EXPORT
+// ========================
+function exportCSV() {
+  const rows = [['Mes','Ítem','Tipo','Categoría','Presupuesto','Fuente Presup.','Real','Diferencia']];
+  MESES.forEach((m, mi) => {
+    if (mi === 0) return;
+    GASTOS_BASE.forEach(g => {
+      const p = getPresup(mi, g.name);
+      const real = getRealVal(mi, g.name);
+      rows.push([m + "'26", g.name, 'Base', g.cat, p.val, p.source, real !== null ? real : '', real !== null ? p.val - real : '']);
+    });
+    getExtras(mi).forEach(e => {
+      rows.push([m + "'26", e.name, 'Extra', e.cat, e.presup || 0, 'manual', e.real !== undefined ? e.real : '', e.presup && e.real !== undefined ? e.presup - e.real : '']);
+    });
+  });
+  const csv = rows.map(r => r.join(';')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = 'RRS_control_financiero_2026.csv';
+  a.click();
+}
+
+// ========================
+// RENDER
+// ========================
+function render() {
+  buildMonthNav();
+  renderExpenseTable();
+  updateTotals();
+  updateKPIs();
+  renderSavingsChart();
+  updateCatProgress();
+  renderDebtList();
+  renderObjetivos();
+  renderChecklist();
+  updateAlerts();
+  renderDeptos();
+  renderDeptoHistorial();
+  const ta = document.getElementById('notesArea');
+  ta.value = notes[currentMonth] || '';
+  ta.onchange = () => { notes[currentMonth] = ta.value; scheduleSave(); };
+}
+
+loadLocal();
+render();
+</script>
+</body>
+</html>
