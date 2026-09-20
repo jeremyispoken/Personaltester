@@ -38,12 +38,13 @@
   .toolbar button:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(40,60,90,.12)}
   .toolbar button.primary{background:#3f7dfb;border-color:#3f7dfb;color:#fff}
   .toolbar button.primary:hover{background:#2f6ceb}
+  .toolbar button.ghost{background:#edf4ff;border-color:#d9e8ff;color:#2f5fb7}
   .toolbar button.danger:hover{background:#fff1f1;border-color:#f3b7b7;color:#c33}
 
   #canvas{
     position:relative;display:flex;flex-direction:column;
-    align-items:center;gap:95px;
-    padding:55px 60px 80px;
+    align-items:center;gap:40px;
+    padding:18px 60px 80px;
     overflow-x:auto;overflow-y:hidden;
   }
   #lines{
@@ -54,10 +55,26 @@
     fill:none;stroke:#c3cfe0;stroke-width:2;
     stroke-linecap:round;stroke-linejoin:round;
   }
+  .tree-section{
+    position:relative;width:100%;
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+    z-index:1;
+  }
+  .tree-section-title{
+    position:relative;display:inline-flex;align-items:center;gap:8px;
+    font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;
+    color:#7e8ea8;background:rgba(255,255,255,.6);padding:7px 14px;border-radius:999px;
+    border:1px solid rgba(163,176,196,.55);box-shadow:0 4px 12px rgba(40,60,90,.06);
+  }
+  .tree-section-title::before{
+    content:'';display:block;width:8px;height:8px;border-radius:50%;background:linear-gradient(180deg,#68a4ff,#3f7dfb)
+  }
+  .section-desc .tree-section-title::before{background:linear-gradient(180deg,#ff9a8b,#ff6d7d)}
+
   .gen{
     position:relative;width:100%;
     display:flex;justify-content:center;align-items:flex-start;
-    gap:74px;z-index:1;
+    gap:74px;z-index:1;min-height:92px;padding:0 0 8px;
   }
   .gen-label{
     position:absolute;left:-4px;top:50%;transform:translateY(-50%);
@@ -65,8 +82,13 @@
     color:#a8b4c6;writing-mode:vertical-rl;rotate:180deg;pointer-events:none;
     white-space:nowrap;
   }
-  .couple{display:flex;gap:28px;align-items:flex-start}
-  .single{display:flex}
+  .couple{position:relative;display:flex;gap:28px;align-items:flex-start;padding:8px 10px 4px;border-radius:16px;}
+  .couple::before{
+    content:'';position:absolute;left:50%;top:-8px;transform:translateX(-50%);
+    width:calc(100% - 36px);height:12px;border:2px solid rgba(87,135,206,.6);border-bottom:none;border-radius:12px 12px 0 0;
+    opacity:.75;
+  }
+  .single{display:flex;position:relative}
 
   /* ---------- Tarjeta ---------- */
   .card{
@@ -124,6 +146,18 @@
   .card:hover .del{opacity:1}
   .del:hover{background:#ffe3e3;color:#d64545}
 
+  .unit-tools{
+    position:absolute;left:50%;top:-16px;transform:translateX(-50%);
+    display:flex;gap:6px;opacity:0;transition:opacity .15s;
+  }
+  .couple:hover .unit-tools, .single:hover .unit-tools{opacity:1}
+  .unit-tools button{
+    width:22px;height:22px;border:none;border-radius:50%;cursor:pointer;
+    background:#fff;border:1px solid rgba(90,117,160,.26);color:#425674;
+    box-shadow:0 4px 12px rgba(35,55,88,.08);font-size:12px;line-height:1;
+  }
+  .unit-tools button:hover{background:#eef4ff;color:#2347b7}
+
   /* ---------- Menú ---------- */
   .card-menu{
     position:fixed;z-index:200;
@@ -161,7 +195,8 @@
   .picker button:hover{background:#eef4ff;transform:scale(1.15)}
 
   @media (max-width:900px){
-    #canvas{padding:40px 24px 60px;gap:80px}
+    #canvas{padding:40px 24px 60px;gap:20px}
+    .tree-section{gap:10px}
     .gen{gap:40px}
     .couple{gap:18px}
     .gen-label{display:none}
@@ -177,6 +212,7 @@
   <div class="toolbar">
     <button id="btnExport">⬇ Exportar</button>
     <button id="btnImport">⬆ Importar</button>
+    <button id="btnManualOrder" class="ghost">↕ Orden manual</button>
     <button id="btnReset" class="danger">↺ Reiniciar</button>
     <input type="file" id="fileInput" accept="application/json" hidden>
   </div>
@@ -188,11 +224,14 @@
 
 <script>
 /* ============================================================
-   DATOS  v2
+   DATOS v2
    persona: { nombre, genero, emoji, fechas, lugar,
-              padres: [id...],   // 0, 1 ó 2
-              pareja: id | null  // enlace bidireccional
-            }
+             padres: [id...],
+             pareja: id | null,
+             grupo?: string
+           }
+   config: { manualOrder: boolean }
+   ordenManual: { [nivel]: [key,...] }
    ============================================================ */
 const STORAGE_KEY = 'arbol-familiar-v2';
 const EMOJIS = ['🙂','😀','👨','👩','🧑','👦','👧','👴','👵','👶','🧔','👨‍🦱','👩‍🦰','👨‍🦳','👩‍🦳','🧒','💙','💗','🌟'];
@@ -200,16 +239,33 @@ const EMOJIS = ['🙂','😀','👨','👩','🧑','👦','👧','👴','👵','
 function plantilla(){
   return {
     titulo: 'Mi Árbol Genealógico',
+    config: { manualOrder: false },
+    ordenManual: {},
     personas: {
-      abueloP: { nombre:'Abuelo paterno', genero:'m', emoji:'👴', fechas:'', lugar:'', padres:[],           pareja:'abuelaP' },
-      abuelaP: { nombre:'Abuela paterna', genero:'f', emoji:'👵', fechas:'', lugar:'', padres:[],           pareja:'abueloP' },
-      abueloM: { nombre:'Abuelo materno', genero:'m', emoji:'👴', fechas:'', lugar:'', padres:[],           pareja:'abuelaM' },
-      abuelaM: { nombre:'Abuela materna', genero:'f', emoji:'👵', fechas:'', lugar:'', padres:[],           pareja:'abueloM' },
-      padre:   { nombre:'Papá',           genero:'m', emoji:'👨', fechas:'', lugar:'', padres:['abueloP','abuelaP'], pareja:'madre' },
-      madre:   { nombre:'Mamá',           genero:'f', emoji:'👩', fechas:'', lugar:'', padres:['abueloM','abuelaM'], pareja:'padre' },
-      yo:      { nombre:'Yo',             genero:'m', emoji:'🙂', fechas:'', lugar:'', padres:['padre','madre'],     pareja:null }
+      abueloP: { nombre:'Abuelo paterno', genero:'m', emoji:'👴', fechas:'', lugar:'', padres:[], pareja:'abuelaP' },
+      abuelaP: { nombre:'Abuela paterna', genero:'f', emoji:'👵', fechas:'', lugar:'', padres:[], pareja:'abueloP' },
+      abueloM: { nombre:'Abuelo materno', genero:'m', emoji:'👴', fechas:'', lugar:'', padres:[], pareja:'abuelaM' },
+      abuelaM: { nombre:'Abuela materna', genero:'f', emoji:'👵', fechas:'', lugar:'', padres:[], pareja:'abueloM' },
+      padre:   { nombre:'Papá',          genero:'m', emoji:'👨', fechas:'', lugar:'', padres:['abueloP','abuelaP'], pareja:'madre' },
+      madre:   { nombre:'Mamá',          genero:'f', emoji:'👩', fechas:'', lugar:'', padres:['abueloM','abuelaM'], pareja:'padre' },
+      yo:      { nombre:'Yo',            genero:'m', emoji:'🙂', fechas:'', lugar:'', padres:['padre','madre'], pareja:null }
     }
   };
+}
+
+function normalizarDatos(d){
+  if (!d || !d.personas || !d.personas.yo || !Array.isArray(d.personas.yo.padres)) return null;
+  d.config = Object.assign({ manualOrder: false }, d.config || {});
+  d.ordenManual = d.ordenManual || {};
+
+  for (const id in d.personas){
+    const p = d.personas[id];
+    if (!p) continue;
+    p.padres = Array.isArray(p.padres) ? p.padres : [];
+    p.pareja = p.pareja || null;
+    p.genero = p.genero || 'm';
+  }
+  return d;
 }
 
 function cargar(){
@@ -217,16 +273,17 @@ function cargar(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const d = JSON.parse(raw);
-    if (!d.personas || !d.personas.yo || !Array.isArray(d.personas.yo.padres)) return null;
-    return d;
+    return normalizarDatos(d);
   }catch(e){ return null; }
 }
-function guardar(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }catch(e){} }
+function guardar(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }catch(e){}
+}
 
 let data = cargar() || plantilla();
 
 /* ============================================================
-   NIVELES (BFS desde "yo")
+   NIVELES
    ============================================================ */
 function computeLevels(){
   const nivel = { yo: 0 };
@@ -265,8 +322,12 @@ function computeLevels(){
 }
 
 /* ============================================================
-   ORDENACIÓN (barycenter heuristic)
+   ORDENACIÓN y MANUAL
    ============================================================ */
+function unitKey(unit){
+  return [...unit].sort().join('|');
+}
+
 function groupIntoUnits(ids){
   const units = [], used = new Set();
   for (const id of ids){
@@ -276,53 +337,93 @@ function groupIntoUnits(ids){
       units.push([id, p.pareja]);
       used.add(id); used.add(p.pareja);
     } else {
-      units.push([id]); used.add(id);
+      units.push([id]);
+      used.add(id);
     }
   }
   return units;
 }
 
+function ordenarPorOrdenManual(level, units){
+  const saved = data.ordenManual?.[level] || [];
+  const savedIndex = new Map(saved.map((entry, idx) => [entry, idx]));
+  units.sort((a, b) => {
+    const ka = unitKey(a);
+    const kb = unitKey(b);
+    const ia = savedIndex.has(ka) ? savedIndex.get(ka) : Number.MAX_SAFE_INTEGER;
+    const ib = savedIndex.has(kb) ? savedIndex.get(kb) : Number.MAX_SAFE_INTEGER;
+    return ia - ib;
+  });
+  return units;
+}
+
 function ordenarNiveles(levels){
-  const levelKeys = Object.keys(levels).map(Number).sort((a,b) => b - a);
+  const levelKeys = Object.keys(levels).map(Number).sort((a, b) => b - a);
   const orden = {};
-  for (const L of levelKeys) orden[L] = groupIntoUnits(levels[L]);
 
-  function getPos(id){
-    for (const L of levelKeys){
-      const arr = orden[L];
-      for (let j = 0; j < arr.length; j++){
-        const idx = arr[j].indexOf(id);
-        if (idx >= 0) return j * 10 + idx;
-      }
+  for (const L of levelKeys){
+    const units = groupIntoUnits(levels[L]);
+
+    if (data.config?.manualOrder){
+      orden[L] = ordenarPorOrdenManual(L, units);
+      continue;
     }
-    return -1;
-  }
 
-  for (let iter = 0; iter < 4; iter++){
-    for (const L of levelKeys){
-      const withBary = orden[L].map((unit, idx) => {
-        const ns = [];
-        for (const id of unit){
-          const p = data.personas[id];
-          for (const pid of (p.padres || [])){
-            const pos = getPos(pid);
-            if (pos >= 0) ns.push(pos);
-          }
-          for (const cid in data.personas){
-            if (data.personas[cid].padres?.includes(id)){
-              const pos = getPos(cid);
-              if (pos >= 0) ns.push(pos);
-            }
+    const withBary = units.map((unit, idx) => {
+      const pesos = [];
+      for (const id of unit){
+        const p = data.personas[id];
+        for (const pid of (p.padres || [])){
+          const pos = getPosInTree(pid, levelKeys);
+          if (pos >= 0) pesos.push(pos);
+        }
+        for (const cid in data.personas){
+          if (data.personas[cid].padres?.includes(id)){
+            const pos = getPosInTree(cid, levelKeys);
+            if (pos >= 0) pesos.push(pos);
           }
         }
-        const bary = ns.length ? ns.reduce((a,b)=>a+b,0)/ns.length : idx*10;
-        return { unit, bary, idx };
-      });
-      withBary.sort((a,b) => a.bary - b.bary || a.idx - b.idx);
-      orden[L] = withBary.map(x => x.unit);
+      }
+      const bary = pesos.length ? pesos.reduce((a, b) => a + b, 0)/pesos.length : idx * 10;
+      return { unit, bary, idx };
+    });
+
+    withBary.sort((a, b) => a.bary - b.bary || a.idx - b.idx);
+    orden[L] = withBary.map(x => x.unit);
+  }
+
+  return { levelKeys, orden };
+}
+
+function getPosInTree(id, levelKeys){
+  for (const L of levelKeys){
+    const arr = groupIntoUnits(computeLevels()[L] || []);
+    for (let j = 0; j < arr.length; j++){
+      if (arr[j].includes(id)) return j * 10 + arr[j].indexOf(id);
     }
   }
-  return { levelKeys, orden };
+  return -1;
+}
+
+function moverUnidad(level, key, delta){
+  const arr = data.ordenManual?.[level] || [];
+  const idx = arr.indexOf(key);
+  if (idx < 0) return;
+  const next = idx + delta;
+  if (next < 0 || next >= arr.length) return;
+  const copy = arr.slice();
+  [copy[idx], copy[next]] = [copy[next], copy[idx]];
+  data.ordenManual[level] = copy;
+  guardar(); render();
+}
+
+function guardarOrdenNivel(level, units){
+  if (!data.ordenManual[level]) data.ordenManual[level] = [];
+  const actual = units.map(unit => unitKey(unit));
+  const merged = [...new Set([...data.ordenManual[level], ...actual])];
+  const ordered = actual.filter(k => merged.includes(k));
+  const extras = merged.filter(k => !actual.includes(k));
+  data.ordenManual[level] = [...ordered, ...extras];
 }
 
 /* ============================================================
@@ -330,7 +431,7 @@ function ordenarNiveles(levels){
    ============================================================ */
 function render(){
   const canvas = document.getElementById('canvas');
-  canvas.querySelectorAll('.gen').forEach(el => el.remove());
+  canvas.querySelectorAll('.tree-section, .gen').forEach(el => el.remove());
 
   const levels = computeLevels();
   const { levelKeys, orden } = ordenarNiveles(levels);
@@ -341,23 +442,71 @@ function render(){
     '-1': 'Hijos', '-2': 'Nietos', '-3': 'Bisnietos'
   };
 
-  for (const L of levelKeys){
-    const fila = document.createElement('div');
-    fila.className = 'gen';
+  const secciones = [
+    { tipo: 'asc', title: 'Ascendencia', niveles: levelKeys.filter(L => L >= 0).sort((a, b) => b - a) },
+    { tipo: 'desc', title: 'Descendencia', niveles: levelKeys.filter(L => L < 0).sort((a, b) => a - b) }
+  ].filter(s => s.niveles.length);
 
-    const label = document.createElement('span');
-    label.className = 'gen-label';
-    label.textContent = etiquetas[L] || (L > 0 ? '+' + L : L);
-    fila.appendChild(label);
+  for (const section of secciones){
+    const sectionEl = document.createElement('div');
+    sectionEl.className = 'tree-section ' + (section.tipo === 'desc' ? 'section-desc' : 'section-asc');
 
-    for (const unit of orden[L]){
-      const wrap = document.createElement('div');
-      wrap.className = unit.length === 2 ? 'couple' : 'single';
-      unit.forEach(id => wrap.appendChild(crearTarjeta(id)));
-      fila.appendChild(wrap);
+    const titleEl = document.createElement('div');
+    titleEl.className = 'tree-section-title';
+    titleEl.textContent = section.title;
+    sectionEl.appendChild(titleEl);
+
+    for (const L of section.niveles){
+      const fila = document.createElement('div');
+      fila.className = 'gen';
+
+      const label = document.createElement('span');
+      label.className = 'gen-label';
+      label.textContent = etiquetas[L] || (L > 0 ? '+' + L : L);
+      fila.appendChild(label);
+
+      const units = orden[L] || [];
+      if (data.config?.manualOrder){
+        for (const unit of units){
+          const wrap = document.createElement('div');
+          wrap.className = unit.length === 2 ? 'couple' : 'single';
+          wrap.dataset.level = String(L);
+          wrap.dataset.key = unitKey(unit);
+
+          const tools = document.createElement('div');
+          tools.className = 'unit-tools';
+          const up = document.createElement('button');
+          up.type = 'button';
+          up.textContent = '↑';
+          up.title = 'Mover arriba';
+          up.addEventListener('click', e => { e.stopPropagation(); moverUnidad(L, unitKey(unit), -1); });
+          const down = document.createElement('button');
+          down.type = 'button';
+          down.textContent = '↓';
+          down.title = 'Mover abajo';
+          down.addEventListener('click', e => { e.stopPropagation(); moverUnidad(L, unitKey(unit), 1); });
+          tools.appendChild(up); tools.appendChild(down); wrap.appendChild(tools);
+
+          unit.forEach(id => wrap.appendChild(crearTarjeta(id)));
+          fila.appendChild(wrap);
+        }
+      } else {
+        for (const unit of units){
+          const wrap = document.createElement('div');
+          wrap.className = unit.length === 2 ? 'couple' : 'single';
+          wrap.dataset.level = String(L);
+          wrap.dataset.key = unitKey(unit);
+          unit.forEach(id => wrap.appendChild(crearTarjeta(id)));
+          fila.appendChild(wrap);
+        }
+      }
+
+      sectionEl.appendChild(fila);
     }
-    canvas.appendChild(fila);
+
+    canvas.appendChild(sectionEl);
   }
+
   programarDibujo();
 }
 
@@ -439,14 +588,15 @@ function programarDibujo(){
 
 function dibujarLineas(){
   const canvas = document.getElementById('canvas');
-  const svg    = document.getElementById('lines');
-  const cr     = canvas.getBoundingClientRect();
-  const sl     = canvas.scrollLeft, st = canvas.scrollTop;
+  const svg = document.getElementById('lines');
+  const cr = canvas.getBoundingClientRect();
+  const sl = canvas.scrollLeft,
+        st = canvas.scrollTop;
 
   const W = canvas.scrollWidth, H = canvas.scrollHeight;
   svg.setAttribute('width', W);
   svg.setAttribute('height', H);
-  svg.style.width  = W + 'px';
+  svg.style.width = W + 'px';
   svg.style.height = H + 'px';
 
   const rect = id => {
@@ -455,9 +605,9 @@ function dibujarLineas(){
     const r = el.getBoundingClientRect();
     return {
       left: r.left - cr.left + sl, right: r.right - cr.left + sl,
-      top:  r.top  - cr.top  + st, bottom:r.bottom - cr.top + st,
-      cx:   r.left - cr.left + sl + r.width/2,
-      cy:   r.top  - cr.top  + st + r.height/2
+      top: r.top - cr.top + st, bottom: r.bottom - cr.top + st,
+      cx: r.left - cr.left + sl + r.width/2,
+      cy: r.top - cr.top + st + r.height/2
     };
   };
 
@@ -471,7 +621,6 @@ function dibujarLineas(){
   }
 
   const paths = [];
-
   for (const key in grupos){
     const g = grupos[key];
     const rectsP = g.parents.map(rect).filter(Boolean);
@@ -480,7 +629,7 @@ function dibujarLineas(){
 
     let midX, yBase;
     if (rectsP.length === 2){
-      const [A, B] = rectsP;
+      const A = rectsP[0], B = rectsP[1];
       yBase = (A.cy + B.cy) / 2;
       const L = A.cx < B.cx ? A : B;
       const R = A.cx < B.cx ? B : A;
@@ -518,7 +667,7 @@ function abrirMenu(id, anchor){
 
   const tienePadre = p.padres.some(pid => data.personas[pid]?.genero === 'm');
   const tieneMadre = p.padres.some(pid => data.personas[pid]?.genero === 'f');
-  const slotLibre  = p.padres.length < 2;
+  const slotLibre = p.padres.length < 2;
 
   const add = (txt, fn, disabled=false, danger=false) => {
     const b = document.createElement('button');
@@ -529,22 +678,22 @@ function abrirMenu(id, anchor){
     menu.appendChild(b);
   };
 
-  add('↑  Añadir padre',   () => addParent(id, 'm'), !slotLibre || tienePadre);
-  add('↑  Añadir madre',   () => addParent(id, 'f'), !slotLibre || tieneMadre);
-  add('↓  Añadir hijo/a',  () => addChild(id));
-  add('↔  Añadir hermano/a',() => addSibling(id), !p.padres.length);
-  add('💑  Añadir pareja',  () => addPartner(id), !!p.pareja);
+  add('↑  Añadir padre', () => addParent(id, 'm'), !slotLibre || tienePadre);
+  add('↑  Añadir madre', () => addParent(id, 'f'), !slotLibre || tieneMadre);
+  add('↓  Añadir hijo/a', () => addChild(id));
+  add('↔  Añadir hermano/a', () => addSibling(id), !p.padres.length);
+  add('💑  Añadir pareja', () => addPartner(id), !!p.pareja);
   if (id !== 'yo') add('✕  Eliminar', () => removePerson(id), false, true);
 
   document.body.appendChild(menu);
   const r = anchor.getBoundingClientRect();
   const mw = menu.offsetWidth, mh = menu.offsetHeight;
   let left = r.left;
-  let top  = r.bottom + 6;
+  let top = r.bottom + 6;
   if (left + mw > innerWidth - 8) left = innerWidth - mw - 8;
   if (top + mh > innerHeight - 8) top = r.top - mh - 6;
   menu.style.left = Math.max(8, left) + 'px';
-  menu.style.top  = Math.max(8, top) + 'px';
+  menu.style.top = Math.max(8, top) + 'px';
 
   menuEl = menu;
   setTimeout(() => document.addEventListener('click', fueraMenu), 0);
@@ -651,7 +800,7 @@ function abrirPicker(anchor, id){
   const r = anchor.getBoundingClientRect();
   const w = pop.offsetWidth, h = pop.offsetHeight;
   pop.style.left = Math.max(8, Math.min(r.left + r.width/2 - w/2, innerWidth - w - 8)) + 'px';
-  pop.style.top  = (r.bottom + h + 12 > innerHeight ? r.top - h - 8 : r.bottom + 8) + 'px';
+  pop.style.top = (r.bottom + h + 12 > innerHeight ? r.top - h - 8 : r.bottom + 8) + 'px';
 
   pickerEl = pop;
   setTimeout(() => document.addEventListener('click', fueraClick), 0);
@@ -678,10 +827,10 @@ function importar(file){
   reader.onload = () => {
     try{
       const d = JSON.parse(reader.result);
-      if (!d.personas || !d.personas.yo) throw new Error('Formato inválido');
-      data = d; guardar();
+      data = normalizarDatos(d) || plantilla();
       document.getElementById('titulo').textContent = data.titulo || 'Mi Árbol Genealógico';
       render();
+      guardar();
     }catch(e){ alert('No se pudo importar: ' + e.message); }
   };
   reader.readAsText(file);
@@ -696,6 +845,19 @@ function reiniciar(){
   render();
 }
 
+function toggleManualOrder(){
+  data.config.manualOrder = !data.config.manualOrder;
+  if (!data.config.manualOrder) {
+    const levels = computeLevels();
+    for (const L in levels){
+      const units = groupIntoUnits(levels[L]);
+      guardarOrdenNivel(Number(L), units);
+    }
+  }
+  guardar();
+  render();
+}
+
 /* ============================================================
    INICIALIZACIÓN
    ============================================================ */
@@ -706,6 +868,7 @@ tituloEl.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDef
 
 document.getElementById('btnExport').addEventListener('click', exportar);
 document.getElementById('btnReset').addEventListener('click', reiniciar);
+document.getElementById('btnManualOrder').addEventListener('click', toggleManualOrder);
 
 const fileInput = document.getElementById('fileInput');
 document.getElementById('btnImport').addEventListener('click', () => fileInput.click());
@@ -714,8 +877,14 @@ fileInput.addEventListener('change', e => {
   e.target.value = '';
 });
 
-render();
+function actualizarBotonManual(){
+  const btn = document.getElementById('btnManualOrder');
+  btn.classList.toggle('primary', data.config.manualOrder);
+  btn.textContent = data.config.manualOrder ? '✓ Orden manual' : '↕ Orden manual';
+}
 
+render();
+actualizarBotonManual();
 window.addEventListener('resize', programarDibujo);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(programarDibujo);
 new ResizeObserver(programarDibujo).observe(document.getElementById('canvas'));
