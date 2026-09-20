@@ -361,8 +361,19 @@ function ordenarNiveles(levels){
   const levelKeys = Object.keys(levels).map(Number).sort((a, b) => b - a);
   const orden = {};
 
+  // Índice de posición de cada persona, calculado una sola vez a partir de
+  // los niveles ya conocidos (evita recomputar computeLevels() por cada lookup).
+  const posIndex = new Map();
+  const unitsPorNivel = {};
   for (const L of levelKeys){
-    const units = groupIntoUnits(levels[L]);
+    const arr = groupIntoUnits(levels[L]);
+    unitsPorNivel[L] = arr;
+    arr.forEach((unit, j) => unit.forEach((id, k) => posIndex.set(id, j * 10 + k)));
+  }
+  const getPos = id => posIndex.has(id) ? posIndex.get(id) : -1;
+
+  for (const L of levelKeys){
+    const units = unitsPorNivel[L];
 
     if (data.config?.manualOrder){
       orden[L] = ordenarPorOrdenManual(L, units);
@@ -374,12 +385,12 @@ function ordenarNiveles(levels){
       for (const id of unit){
         const p = data.personas[id];
         for (const pid of (p.padres || [])){
-          const pos = getPosInTree(pid, levelKeys);
+          const pos = getPos(pid);
           if (pos >= 0) pesos.push(pos);
         }
         for (const cid in data.personas){
           if (data.personas[cid].padres?.includes(id)){
-            const pos = getPosInTree(cid, levelKeys);
+            const pos = getPos(cid);
             if (pos >= 0) pesos.push(pos);
           }
         }
@@ -393,16 +404,6 @@ function ordenarNiveles(levels){
   }
 
   return { levelKeys, orden };
-}
-
-function getPosInTree(id, levelKeys){
-  for (const L of levelKeys){
-    const arr = groupIntoUnits(computeLevels()[L] || []);
-    for (let j = 0; j < arr.length; j++){
-      if (arr[j].includes(id)) return j * 10 + arr[j].indexOf(id);
-    }
-  }
-  return -1;
 }
 
 function moverUnidad(level, key, delta){
@@ -571,7 +572,7 @@ function campo(id, key, placeholder, clase){
   });
   el.addEventListener('paste', e => {
     e.preventDefault();
-    const texto = (e.clipboardData || window.clipboardData).getData('text/plain');
+    const texto = (e.clipboardData || window.clipboardData).getData('text/plain').replace(/[\r\n]+/g, ' ');
     document.execCommand('insertText', false, texto);
   });
   return el;
