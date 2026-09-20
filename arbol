@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🌳 Mi Árbol Genealógico</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    color:#2b3442;
+    min-height:100vh;
+    padding-bottom:50px;
+    background:
+      radial-gradient(1200px 600px at 12% -10%, #fff3e2 0%, transparent 60%),
+      radial-gradient(1000px 520px at 92% 5%, #e6efff 0%, transparent 55%),
+      #f4f7fb;
+  }
+
+  /* ---------- Cabecera ---------- */
+  header{padding:26px 20px 8px;text-align:center}
+  h1{
+    display:inline-block;margin:0;padding:4px 14px;border-radius:12px;
+    font-size:clamp(19px,3vw,28px);font-weight:700;letter-spacing:-.5px;color:#1e2a3c;
+    transition:background .15s;
+  }
+  h1:hover{background:rgba(255,255,255,.7)}
+  .hint{font-size:12.5px;color:#8592a6;margin:8px 0 14px}
+
+  .toolbar{
+    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
+    padding:0 16px 8px;
+  }
+  .toolbar button{
+    font:inherit;font-size:13px;font-weight:600;
+    padding:8px 14px;border-radius:10px;cursor:pointer;
+    border:1px solid #d7e0ec;background:#fff;color:#3c4a5e;
+    box-shadow:0 2px 6px rgba(40,60,90,.06);
+    transition:transform .15s,box-shadow .15s,background .15s;
+  }
+  .toolbar button:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(40,60,90,.12)}
+  .toolbar button.primary{background:#3f7dfb;border-color:#3f7dfb;color:#fff}
+  .toolbar button.primary:hover{background:#2f6ceb}
+  .toolbar button.danger:hover{background:#fff1f1;border-color:#f3b7b7;color:#c33}
+
+  /* ---------- Lienzo ---------- */
+  #canvas{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:95px;
+    padding:55px 60px 80px;
+    overflow-x:auto;
+    overflow-y:hidden;
+  }
+  #lines{
+    position:absolute;top:0;left:0;
+    pointer-events:none;z-index:0;overflow:visible;
+  }
+  #lines path{
+    fill:none;stroke:#c3cfe0;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
+
+  .gen{
+    position:relative;
+    width:100%;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    gap:74px;
+    z-index:1;
+  }
+  .gen-label{
+    position:absolute;
+    left:-4px;top:50%;transform:translateY(-50%);
+    font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+    color:#a8b4c6;writing-mode:vertical-rl;rotate:180deg;
+    pointer-events:none;
+  }
+  .couple{display:flex;gap:28px;align-items:flex-start}
+  .single{display:flex}
+
+  /* ---------- Tarjeta ---------- */
+  .card{
+    position:relative;
+    width:172px;
+    background:#fff;
+    border-radius:18px;
+    padding:16px 12px 14px;
+    text-align:center;
+    border:2px solid transparent;
+    box-shadow:0 6px 20px rgba(40,60,90,.09);
+    transition:transform .18s ease,box-shadow .18s ease;
+    animation:pop .35s ease backwards;
+  }
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.96)}}
+  .card:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(40,60,90,.15)}
+  .card.masc{border-color:#bcd8f8;background:linear-gradient(180deg,#f7fbff,#fff)}
+  .card.fem{border-color:#f8cbdd;background:linear-gradient(180deg,#fff8fb,#fff)}
+
+  .avatar{
+    width:56px;height:56px;margin:0 auto 10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:29px;line-height:1;cursor:pointer;
+    border-radius:50%;border:none;
+    background:#eef3fa;
+    box-shadow:inset 0 0 0 1px rgba(60,90,140,.08);
+    transition:transform .15s,box-shadow .15s;
+  }
+  .card.fem .avatar{background:#fdeef4}
+  .avatar:hover{transform:scale(1.08);box-shadow:0 4px 14px rgba(60,90,140,.18)}
+
+  .campo{
+    padding:3px 6px;border-radius:7px;outline:none;
+    transition:background .15s;
+    word-break:break-word;
+    min-height:1.2em;
+  }
+  .campo:hover{background:rgba(63,125,251,.07)}
+  .campo:focus{background:rgba(63,125,251,.13);box-shadow:0 0 0 2px rgba(63,125,251,.25)}
+  .campo:empty::before{content:attr(data-ph);color:#bcc6d4;font-style:italic}
+
+  .nombre{font-weight:700;font-size:14.5px;color:#1f2b3d;line-height:1.25}
+  .fechas{font-size:11.5px;color:#7f8da3;margin-top:5px;font-variant-numeric:tabular-nums}
+  .lugar{font-size:11px;color:#a3aebe;margin-top:2px}
+
+  .del{
+    position:absolute;top:6px;right:6px;
+    width:22px;height:22px;border-radius:50%;border:none;cursor:pointer;
+    background:#f1f4f9;color:#93a0b3;font-size:15px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;transition:opacity .15s,background .15s,color .15s;
+  }
+  .card:hover .del{opacity:1}
+  .del:hover{background:#ffe3e3;color:#d64545}
+
+  /* ---------- Selector de emoji ---------- */
+  .picker{
+    position:fixed;z-index:100;
+    display:grid;grid-template-columns:repeat(6,1fr);gap:3px;
+    padding:8px;border-radius:14px;
+    background:#fff;box-shadow:0 12px 34px rgba(30,45,70,.22);
+    border:1px solid #e4eaf3;
+    animation:pop .16s ease;
+  }
+  .picker button{
+    width:32px;height:32px;border:none;background:transparent;
+    font-size:19px;cursor:pointer;border-radius:8px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .12s,transform .12s;
+  }
+  .picker button:hover{background:#eef4ff;transform:scale(1.15)}
+
+  @media (max-width:900px){
+    #canvas{padding:40px 24px 60px;gap:80px}
+    .gen{gap:40px}
+    .couple{gap:18px}
+    .gen-label{display:none}
+    .card{width:150px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="titulo" contenteditable="true" spellcheck="false">Mi Árbol Genealógico</h1>
+  <p class="hint">✏️ Haz clic en cualquier texto para editarlo · Toca el icono para cambiarlo</p>
+  <div class="toolbar">
+    <button id="btnHermano" class="primary">＋ Añadir hermano/a</button>
+    <button id="btnExport">⬇ Exportar</button>
+    <button id="btnImport">⬆ Importar</button>
+    <button id="btnReset" class="danger">↺ Reiniciar</button>
+    <input type="file" id="fileInput" accept="application/json" hidden>
+  </div>
+</header>
+
+<main id="canvas">
+  <svg id="lines"></svg>
+</main>
+
+<script>
+/* ============================================================
+   DATOS
+   ============================================================ */
+const STORAGE_KEY = 'arbol-familiar-v1';
+const EMOJIS = ['🙂','😀','👨','👩','🧑','👦','👧','👴','👵','👶','🧔','👨‍🦱','👩‍🦰','👨‍🦳','👩‍🦳','💙','💗','🌟'];
+
+function plantilla(){
+  return {
+    titulo: 'Mi Árbol Genealógico',
+    personas: {
+      abueloP: { nombre:'Abuelo paterno', genero:'m', emoji:'👴', fechas:'', lugar:'' },
+      abuelaP: { nombre:'Abuela paterna', genero:'f', emoji:'👵', fechas:'', lugar:'' },
+      abueloM: { nombre:'Abuelo materno', genero:'m', emoji:'👴', fechas:'', lugar:'' },
+      abuelaM: { nombre:'Abuela materna', genero:'f', emoji:'👵', fechas:'', lugar:'' },
+      padre:   { nombre:'Papá',           genero:'m', emoji:'👨', fechas:'', lugar:'' },
+      madre:   { nombre:'Mamá',           genero:'f', emoji:'👩', fechas:'', lugar:'' },
+      yo:      { nombre:'Yo',             genero:'m', emoji:'🙂', fechas:'', lugar:'' }
+    },
+    parejas: [
+      { a:'abueloP', b:'abuelaP', hijos:['padre'] },
+      { a:'abueloM', b:'abuelaM', hijos:['madre'] },
+      { a:'padre',   b:'madre',   hijos:['yo']    }
+    ]
+  };
+}
+
+function cargar(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    return (d && d.personas && d.parejas) ? d : null;
+  }catch(e){ return null; }
+}
+function guardar(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }catch(e){}
+}
+
+let data = cargar() || plantilla();
+
+/* ============================================================
+   LAYOUT: calcular generaciones (0 = yo, 2 = abuelos)
+   ============================================================ */
+function computeLevels(){
+  const levels = { 0:[], 1:[], 2:[] };
+  const hechos  = new Set();
+  const enCola  = new Set(['yo']);
+  const cola    = [['yo', 0]];
+
+  while (cola.length){
+    const [id, lvl] = cola.shift();
+    if (hechos.has(id) || !data.personas[id]) continue;
+    hechos.add(id);
+    if (!levels[lvl]) levels[lvl] = [];
+    levels[lvl].push(id);
+
+    const par = data.parejas.find(p => p.hijos.includes(id));
+    if (!par) continue;
+
+    // hermanos (mismo nivel)
+    for (const h of par.hijos){
+      if (!enCola.has(h)){ enCola.add(h); cola.push([h, lvl]); }
+    }
+    // padres (nivel superior, sólo hasta la generación 2)
+    if (lvl < 2){
+      for (const padre of [par.a, par.b]){
+        if (!enCola.has(padre)){ enCola.add(padre); cola.push([padre, lvl + 1]); }
+      }
+    }
+  }
+  return levels;
+}
+
+function agrupar(ids){
+  const unidades = [];
+  const usados = new Set();
+  for (const id of ids){
+    if (usados.has(id)) continue;
+    const par = data.parejas.find(p =>
+      (p.a === id || p.b === id) && ids.includes(p.a === id ? p.b : p.a)
+    );
+    if (par){
+      const otro = par.a === id ? par.b : par.a;
+      unidades.push([id, otro]);
+      usados.add(id); usados.add(otro);
+    } else {
+      unidades.push([id]);
+      usados.add(id);
+    }
+  }
+  return unidades;
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function render(){
+  const canvas = document.getElementById('canvas');
+  canvas.querySelectorAll('.gen').forEach(el => el.remove());
+
+  const niveles = computeLevels();
+  const etiquetas = ['Yo y hermanos', 'Padres', 'Abuelos'];
+
+  for (let lvl = 2; lvl >= 0; lvl--){
+    const ids = niveles[lvl] || [];
+    if (!ids.length) continue;
+
+    const fila = document.createElement('div');
+    fila.className = 'gen';
+
+    const label = document.createElement('span');
+    label.className = 'gen-label';
+    label.textContent = etiquetas[lvl];
+    fila.appendChild(label);
+
+    for (const unidad of agrupar(ids)){
+      const wrap = document.createElement('div');
+      wrap.className = unidad.length === 2 ? 'couple' : 'single';
+      unidad.forEach(id => wrap.appendChild(crearTarjeta(id)));
+      fila.appendChild(wrap);
+    }
+    canvas.appendChild(fila);
+  }
+  programarDibujo();
+}
+
+function crearTarjeta(id){
+  const p = data.personas[id];
+  const card = document.createElement('div');
+  card.className = 'card ' + (p.genero === 'f' ? 'fem' : 'masc');
+  card.dataset.id = id;
+
+  const avatar = document.createElement('button');
+  avatar.type = 'button';
+  avatar.className = 'avatar';
+  avatar.title = 'Cambiar icono';
+  avatar.textContent = p.emoji || '🙂';
+  avatar.addEventListener('click', () => abrirPicker(avatar, id));
+
+  card.append(
+    avatar,
+    campo(id, 'nombre', 'Nombre', 'nombre'),
+    campo(id, 'fechas', '1950 – 2020', 'fechas'),
+    campo(id, 'lugar', 'Ciudad', 'lugar')
+  );
+
+  if (id.startsWith('hermano')){
+    const del = document.createElement('button');
+    del.className = 'del';
+    del.type = 'button';
+    del.textContent = '×';
+    del.title = 'Eliminar';
+    del.addEventListener('click', () => eliminarPersona(id));
+    card.appendChild(del);
+  }
+  return card;
+}
+
+function campo(id, key, placeholder, clase){
+  const el = document.createElement('div');
+  el.className = 'campo ' + clase;
+  el.contentEditable = 'true';
+  el.spellcheck = false;
+  el.dataset.ph = placeholder;
+  el.dataset.field = key;
+  el.textContent = data.personas[id][key] || '';
+
+  el.addEventListener('input', () => {
+    data.personas[id][key] = el.textContent.trim();
+    guardar();
+    programarDibujo();
+  });
+  el.addEventListener('blur', () => {
+    if (!el.textContent.trim()) el.innerHTML = '';
+    data.personas[id][key] = el.textContent.trim();
+    guardar();
+    programarDibujo();
+  });
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter'){ e.preventDefault(); el.blur(); }
+  });
+  el.addEventListener('paste', e => {
+    e.preventDefault();
+    const texto = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, texto);
+  });
+  return el;
+}
+
+/* ============================================================
+   DIBUJO DE LÍNEAS (SVG)
+   ============================================================ */
+let rafId = null;
+function programarDibujo(){
+  if (rafId) return;
+  rafId = requestAnimationFrame(() => { rafId = null; dibujarLineas(); });
+}
+
+function dibujarLineas(){
+  const canvas = document.getElementById('canvas');
+  const svg    = document.getElementById('lines');
+  const cr     = canvas.getBoundingClientRect();
+  const sl     = canvas.scrollLeft, st = canvas.scrollTop;
+
+  const W = canvas.scrollWidth, H = canvas.scrollHeight;
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.style.width  = W + 'px';
+  svg.style.height = H + 'px';
+
+  const rect = id => {
+    const el = document.querySelector('.card[data-id="' + id + '"]');
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return {
+      left:   r.left - cr.left + sl,
+      right:  r.right - cr.left + sl,
+      top:    r.top - cr.top + st,
+      bottom: r.bottom - cr.top + st,
+      cx:     r.left - cr.left + sl + r.width / 2,
+      cy:     r.top - cr.top + st + r.height / 2
+    };
+  };
+
+  const paths = [];
+
+  for (const par of data.parejas){
+    const A = rect(par.a), B = rect(par.b);
+    const hijos = par.hijos.map(rect).filter(Boolean);
+    if (!A || !B || !hijos.length) continue;
+
+    // Barra horizontal entre la pareja
+    const y = (A.cy + B.cy) / 2;
+    let x1, x2;
+    if (A.cx <= B.cx){ x1 = A.right; x2 = B.left; } else { x1 = B.right; x2 = A.left; }
+    paths.push(`M ${x1} ${y} H ${x2}`);
+
+    const midX = (x1 + x2) / 2;
+    const fondoPareja = Math.max(A.bottom, B.bottom);
+    const techoHijos  = Math.min(...hijos.map(h => h.top));
+    const unionY = fondoPareja + (techoHijos - fondoPareja) * 0.45;
+
+    // Bajada desde la pareja
+    paths.push(`M ${midX} ${y} V ${unionY}`);
+
+    // Reparto horizontal hacia los hijos
+    const xs = hijos.map(h => h.cx);
+    const minX = Math.min(midX, ...xs);
+    const maxX = Math.max(midX, ...xs);
+    if (maxX - minX > 1) paths.push(`M ${minX} ${unionY} H ${maxX}`);
+
+    // Bajada a cada hijo
+    for (const h of hijos) paths.push(`M ${h.cx} ${unionY} V ${h.top}`);
+  }
+
+  svg.innerHTML = paths.map(d => `<path d="${d}"/>`).join('');
+}
+
+/* ============================================================
+   SELECTOR DE EMOJI
+   ============================================================ */
+let pickerEl = null;
+
+function abrirPicker(anchor, id){
+  cerrarPicker();
+  const pop = document.createElement('div');
+  pop.className = 'picker';
+
+  EMOJIS.forEach(e => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = e;
+    b.addEventListener('click', () => {
+      data.personas[id].emoji = e;
+      anchor.textContent = e;
+      guardar();
+      cerrarPicker();
+    });
+    pop.appendChild(b);
+  });
+
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  pop.style.left = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 8)) + 'px';
+  pop.style.top  = (r.bottom + h + 12 > innerHeight ? r.top - h - 8 : r.bottom + 8) + 'px';
+
+  pickerEl = pop;
+  setTimeout(() => document.addEventListener('click', fueraClick), 0);
+}
+function fueraClick(e){ if (pickerEl && !pickerEl.contains(e.target)) cerrarPicker(); }
+function cerrarPicker(){
+  if (pickerEl){ pickerEl.remove(); pickerEl = null; }
+  document.removeEventListener('click', fueraClick);
+}
+
+/* ============================================================
+   ACCIONES
+   ============================================================ */
+function añadirHermano(){
+  const id = 'hermano' + Date.now();
+  const par = data.parejas.find(p => p.hijos.includes('yo'));
+  if (!par) return;
+
+  data.personas[id] = { nombre:'Hermano/a', genero:'m', emoji:'🧑', fechas:'', lugar:'' };
+  par.hijos.push(id);
+  guardar();
+  render();
+}
+
+function eliminarPersona(id){
+  if (!confirm('¿Eliminar a esta persona del árbol?')) return;
+  delete data.personas[id];
+  data.parejas.forEach(p => {
+    p.hijos = p.hijos.filter(h => h !== id);
+    if (p.a === id) p.a = null;
+    if (p.b === id) p.b = null;
+  });
+  data.parejas = data.parejas.filter(p => p.a && p.b);
+  guardar();
+  render();
+}
+
+function exportar(){
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'arbol-genealogico.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importar(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const d = JSON.parse(reader.result);
+      if (!d.personas || !d.parejas) throw new Error('Formato inválido');
+      data = d;
+      guardar();
+      document.getElementById('titulo').textContent = data.titulo || 'Mi Árbol Genealógico';
+      render();
+    }catch(e){
+      alert('No se pudo importar el archivo: ' + e.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function reiniciar(){
+  if (!confirm('Se borrarán todos los cambios. ¿Continuar?')) return;
+  data = plantilla();
+  localStorage.removeItem(STORAGE_KEY);
+  guardar();
+  document.getElementById('titulo').textContent = data.titulo;
+  render();
+}
+
+/* ============================================================
+   INICIALIZACIÓN
+   ============================================================ */
+const tituloEl = document.getElementById('titulo');
+tituloEl.textContent = data.titulo || 'Mi Árbol Genealógico';
+tituloEl.addEventListener('input', () => {
+  data.titulo = tituloEl.textContent.trim();
+  guardar();
+});
+tituloEl.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); tituloEl.blur(); } });
+
+document.getElementById('btnHermano').addEventListener('click', añadirHermano);
+document.getElementById('btnExport').addEventListener('click', exportar);
+document.getElementById('btnReset').addEventListener('click', reiniciar);
+
+const fileInput = document.getElementById('fileInput');
+document.getElementById('btnImport').addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) importar(e.target.files[0]);
+  e.target.value = '';
+});
+
+render();
+
+window.addEventListener('resize', programarDibujo);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(programarDibujo);
+new ResizeObserver(programarDibujo).observe(document.getElementById('canvas'));
+</script>
+</body>
+</html>
